@@ -1,0 +1,50 @@
+.audit-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 860px;
+}
+
+.audit-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.audit-page__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.audit-month-picker {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem var(--space-3);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.audit-month-picker:focus {
+  border-color: var(--accent);
+}
+
+.audit-page__error {
+  color: var(--danger);
+  font-size: 0.875rem;
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+}
+
+.audit-page__loading {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}

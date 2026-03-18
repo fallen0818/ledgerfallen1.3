@@ -1,0 +1,85 @@
+.re-report {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.re-report__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-4);
+}
+
+.re-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.re-card__label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.re-card__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.re-card--revenue .re-card__value { color: var(--success); }
+.re-card--expenses .re-card__value { color: var(--danger); }
+.re-card--profit .re-card__value { color: var(--success); }
+.re-card--loss .re-card__value { color: var(--danger); }
+
+.re-report__breakdown {
+  padding: var(--space-6);
+}
+
+.re-report__title {
+  font-size: 1.125rem;
+  margin-bottom: var(--space-6);
+  color: var(--text-primary);
+}
+
+.re-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.re-table th {
+  text-align: left;
+  padding: var(--space-3) var(--space-2);
+  border-bottom: 2px solid var(--border);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}
+
+.re-table td {
+  padding: var(--space-4) var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.re-amount {
+  font-weight: 600;
+  text-align: right;
+}
+
+.re-row--income .re-amount { color: var(--success); }
+.re-row--expense .re-amount { color: var(--danger); }
+
+.re-tag {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.re-report__more {
+  text-align: center;
+  color: var(--text-muted);
+  margin-top: var(--space-4);
+  font-size: 0.875rem;
+}

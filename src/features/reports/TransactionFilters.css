@@ -1,0 +1,53 @@
+.tx-filters {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.tx-filters__grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tx-filter {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.tx-filter__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.tx-filter__input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.6rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.tx-filter__input:focus {
+  border-color: var(--accent);
+}
+
+.tx-filters__actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.tx-filters__actions button {
+  flex: 1;
+}

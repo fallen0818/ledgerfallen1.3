@@ -1,0 +1,111 @@
+.tx-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.tx-list__header,
+.tx-list__row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr 2fr 1fr 100px;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.75rem var(--space-5);
+}
+
+.tx-list__header {
+  background: var(--surface);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.tx-list__row {
+  background: var(--bg);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+}
+
+.tx-list__row:last-child {
+  border-bottom: none;
+}
+
+.tx-list__row:hover {
+  background: var(--surface-hover);
+}
+
+.tx-list__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.tx-list__amount {
+  font-weight: 700;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.tx-list__actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.tx-list__action-btn {
+  padding: 0.4rem !important;
+  height: 32px !important;
+  width: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.tx-list__type {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.tx-list__type--income {
+  color: var(--success);
+  background: color-mix(in srgb, var(--success) 15%, transparent);
+}
+
+.tx-list__type--expense {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 15%, transparent);
+}
+
+.tx-list__date {
+  color: var(--text-muted);
+}
+
+.tx-list__desc {
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tx-list__empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: var(--space-8);
+}

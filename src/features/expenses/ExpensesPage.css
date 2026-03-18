@@ -1,0 +1,19 @@
+.expenses-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 960px;
+}
+
+.expenses-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.expenses-page__title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
