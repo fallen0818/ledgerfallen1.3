@@ -4,25 +4,77 @@ import { TransactionForm } from './TransactionForm'
 import { TransactionList } from './TransactionList'
 import { Modal } from '../../components/Shared/Modal'
 import { Button } from '../../components/Shared/Button'
+import { ImportModal } from '../../components/Shared/ImportModal'
+import { useToast } from '../../components/Shared/Toast'
 import { getCurrentMonth } from '../../utils/date'
+import { useAuth } from '../../hooks/useAuth'
+import { exportTransactionsToCSV } from '../../utils/exportUtils'
 import './ExpensesPage.css'
 
 export function ExpensesPage() {
   const month = getCurrentMonth()
   const { transactions, loading, addTransaction, editTransaction, removeTransaction } = useTransactions(month)
   const [showForm, setShowForm] = useState(false)
+  const [showImport, setShowImport] = useState(false)
   const [editingTx, setEditingTx] = useState(null)
+  const toast = useToast()
+  const { user } = useAuth()
 
   const handleAdd = async (transactionData) => {
-    await addTransaction(transactionData)
-    closeModal()
+    try {
+      await addTransaction(transactionData)
+      toast.success('Transaction added successfully!')
+      closeModal()
+    } catch (err) {
+      toast.error('Failed to add transaction: ' + err.message)
+    }
   }
 
   const handleEdit = async (transactionData) => {
     if (editingTx) {
-      await editTransaction(editingTx.id, transactionData)
+      try {
+        await editTransaction(editingTx.id, transactionData)
+        toast.success('Transaction updated successfully!')
+        closeModal()
+      } catch (err) {
+        toast.error('Failed to update transaction: ' + err.message)
+      }
     }
-    closeModal()
+  }
+
+  const handleImport = async (importedTransactions) => {
+    let successCount = 0
+    let errorCount = 0
+
+    for (const tx of importedTransactions) {
+      try {
+        await addTransaction({
+          ...tx,
+          user_email: user?.email
+        })
+        successCount++
+      } catch (err) {
+        errorCount++
+        console.error('Failed to import transaction:', err)
+      }
+    }
+
+    if (errorCount > 0) {
+      toast.warning(`Imported ${successCount} transactions. ${errorCount} failed.`)
+    } else {
+      toast.success(`Successfully imported ${successCount} transactions!`)
+    }
+
+    setShowImport(false)
+  }
+
+  const handleExport = () => {
+    if (transactions.length === 0) {
+      toast.warning('No transactions to export')
+      return
+    }
+    exportTransactionsToCSV(transactions, 'transactions')
+    toast.success('Transactions exported successfully!')
   }
 
   const openAdd = () => {
@@ -44,7 +96,15 @@ export function ExpensesPage() {
     <div className="expenses-page">
       <div className="expenses-page__header">
         <h2 className="expenses-page__title">Transactions</h2>
-        <Button onClick={openAdd}>+ Add Transaction</Button>
+        <div className="expenses-page__actions">
+          <Button variant="secondary" onClick={handleExport} disabled={transactions.length === 0}>
+            Export
+          </Button>
+          <Button variant="secondary" onClick={() => setShowImport(true)}>
+            Import
+          </Button>
+          <Button onClick={openAdd}>+ Add Transaction</Button>
+        </div>
       </div>
 
       <TransactionList
@@ -54,17 +114,23 @@ export function ExpensesPage() {
         onEdit={openEdit}
       />
 
-      <Modal 
-        isOpen={showForm} 
-        onClose={closeModal} 
+      <Modal
+        isOpen={showForm}
+        onClose={closeModal}
         title={editingTx ? 'Edit Transaction' : 'Add Transaction'}
       >
-        <TransactionForm 
-          onSubmit={editingTx ? handleEdit : handleAdd} 
-          onCancel={closeModal} 
+        <TransactionForm
+          onSubmit={editingTx ? handleEdit : handleAdd}
+          onCancel={closeModal}
           initialData={editingTx}
         />
       </Modal>
+
+      <ImportModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        onImport={handleImport}
+      />
     </div>
   )
 }

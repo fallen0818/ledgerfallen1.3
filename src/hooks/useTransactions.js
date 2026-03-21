@@ -8,7 +8,7 @@ import {
 import { getCurrentMonth } from '../utils/date'
 
 /**
- * Hook for managing transactions.
+ * Hook for managing transactions with optimistic updates.
  * @param {string} [month] — 'YYYY-MM'
  */
 export function useTransactions(month = getCurrentMonth()) {
@@ -33,21 +33,81 @@ export function useTransactions(month = getCurrentMonth()) {
     fetchTransactions()
   }, [fetchTransactions])
 
+  // Optimistic add transaction
   const addTransaction = useCallback(async (transactionData) => {
-    const created = await createTransaction(transactionData)
-    setTransactions((prev) => [created, ...prev])
-    return created
+    // Create a temporary ID for optimistic update
+    const tempId = `temp-${Date.now()}`
+    const optimisticTx = {
+      id: tempId,
+      ...transactionData,
+      created_at: new Date().toISOString(),
+    }
+
+    // Optimistically add to the list
+    setTransactions(prev => [optimisticTx, ...prev])
+
+    try {
+      const created = await createTransaction(transactionData)
+      // Replace the optimistic entry with the real one from the server
+      setTransactions(prev =>
+        prev.map(t => t.id === tempId ? created : t)
+      )
+      return created
+    } catch (err) {
+      // Rollback on error
+      setTransactions(prev => prev.filter(t => t.id !== tempId))
+      throw err
+    }
   }, [])
 
+  // Optimistic edit transaction
   const editTransaction = useCallback(async (id, updates) => {
-    const updated = await updateTransaction(id, updates)
-    setTransactions((prev) => prev.map((t) => (t.id === id ? updated : t)))
-    return updated
+    // Store the original for rollback
+    let originalTx = null
+    setTransactions(prev => {
+      const tx = prev.find(t => t.id === id)
+      if (tx) originalTx = { ...tx }
+      return prev.map(t => t.id === id ? { ...t, ...updates } : t)
+    })
+
+    try {
+      const updated = await updateTransaction(id, updates)
+      setTransactions(prev =>
+        prev.map(t => t.id === id ? updated : t)
+      )
+      return updated
+    } catch (err) {
+      // Rollback on error
+      if (originalTx) {
+        setTransactions(prev =>
+          prev.map(t => t.id === id ? originalTx : t)
+        )
+      }
+      throw err
+    }
   }, [])
 
+  // Optimistic delete transaction
   const removeTransaction = useCallback(async (id) => {
-    await deleteTransaction(id)
-    setTransactions((prev) => prev.filter((t) => t.id !== id))
+    // Store the transaction for rollback
+    let deletedTx = null
+    setTransactions(prev => {
+      const tx = prev.find(t => t.id === id)
+      if (tx) deletedTx = { ...tx }
+      return prev.filter(t => t.id !== id)
+    })
+
+    try {
+      await deleteTransaction(id)
+    } catch (err) {
+      // Rollback on error
+      if (deletedTx) {
+        setTransactions(prev => [deletedTx, ...prev].sort((a, b) =>
+          new Date(b.transaction_date) - new Date(a.transaction_date)
+        ))
+      }
+      throw err
+    }
   }, [])
 
   return { transactions, loading, error, addTransaction, editTransaction, removeTransaction, refetch: fetchTransactions }

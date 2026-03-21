@@ -1,18 +1,20 @@
 import React from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
+import { useTheme } from '../../hooks/useTheme'
 import { Button } from '../Shared/Button'
 import './Navbar.css'
 
 const PAGE_TITLES = {
-  '/':         'Dashboard',
+  '/': 'Dashboard',
   '/expenses': 'Expenses',
-  '/audit':    'Audit Reports',
+  '/audit': 'Audit Reports',
 }
 
 export function Navbar() {
   const { pathname } = useLocation()
   const { user, signOut } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const title = PAGE_TITLES[pathname] ?? 'Fallen Ledger'
 
   const initials = user?.email
@@ -23,6 +25,14 @@ export function Navbar() {
     <header className="navbar">
       <h1 className="navbar__title">{title}</h1>
       <div className="navbar__actions">
+        <button
+          className="theme-toggle"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+          title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
         {user && (
           <>
             <div className="navbar__avatar" title={user.email}>{initials}</div>

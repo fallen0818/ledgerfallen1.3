@@ -1,0 +1,317 @@
+.import-modal {
+    min-height: 400px;
+}
+
+.import-modal__upload {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+}
+
+.import-modal__dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--surface);
+}
+
+.import-modal__dropzone:hover {
+    border-color: var(--accent);
+    background: var(--surface-hover);
+}
+
+.import-modal__dropzone--loading {
+    cursor: default;
+    pointer-events: none;
+}
+
+.import-modal__dropzone-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: var(--space-3);
+}
+
+.import-modal__dropzone-text {
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: var(--space-2);
+}
+
+.import-modal__dropzone-hint {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+.import-modal__spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+}
+
+.import-modal__spinner-icon {
+    font-size: 48px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.import-modal__error {
+    padding: var(--space-3) var(--space-4);
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius);
+    color: var(--danger);
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+.import-modal__template {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4);
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.import-modal__template p {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.import-modal__instructions {
+    padding: var(--space-4);
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.import-modal__instructions h4 {
+    font-size: 14px;
+    margin-bottom: var(--space-3);
+    color: var(--text-primary);
+}
+
+.import-modal__instructions ul {
+    margin: 0;
+    padding-left: var(--space-5);
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.8;
+}
+
+/* Preview Step */
+.import-modal__preview {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.import-modal__stats {
+    display: flex;
+    gap: var(--space-4);
+}
+
+.import-modal__stat {
+    flex: 1;
+    padding: var(--space-4);
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    text-align: center;
+}
+
+.import-modal__stat-value {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.import-modal__stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.import-modal__stat--success .import-modal__stat-value {
+    color: var(--success);
+}
+
+.import-modal__stat--warning .import-modal__stat-value {
+    color: var(--warning);
+}
+
+.import-modal__table-wrapper {
+    max-height: 300px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+.import-modal__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.import-modal__table th,
+.import-modal__table td {
+    padding: var(--space-2) var(--space-3);
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.import-modal__table th {
+    background: var(--surface);
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    position: sticky;
+    top: 0;
+}
+
+.import-modal__table tr.selected {
+    background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.import-modal__table tr:hover {
+    background: var(--surface-hover);
+}
+
+.type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.type-badge--income,
+.type-badge--revenue {
+    background: color-mix(in srgb, var(--success) 15%, transparent);
+    color: var(--success);
+}
+
+.type-badge--expense,
+.type-badge--spending {
+    background: color-mix(in srgb, var(--danger) 15%, transparent);
+    color: var(--danger);
+}
+
+.amount-cell {
+    font-weight: 600;
+    text-align: right;
+}
+
+.import-modal__invalid-section {
+    padding: var(--space-4);
+    background: color-mix(in srgb, var(--warning) 10%, transparent);
+    border-radius: var(--radius);
+    border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.import-modal__invalid-section h4 {
+    font-size: 14px;
+    color: var(--warning);
+    margin-bottom: var(--space-3);
+}
+
+.import-modal__invalid-list {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.import-modal__invalid-item {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-1) 0;
+}
+
+.import-modal__invalid-item span:first-child {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.import-modal__invalid-more {
+    margin-top: var(--space-2);
+    font-style: italic;
+}
+
+.import-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+}
+
+/* Importing Step */
+.import-modal__importing {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+}
+
+/* Complete Step */
+.import-modal__complete {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 300px;
+    text-align: center;
+}
+
+.import-modal__complete-icon {
+    font-size: 64px;
+    margin-bottom: var(--space-4);
+}
+
+.import-modal__complete h3 {
+    font-size: 24px;
+    margin-bottom: var(--space-2);
+}
+
+.import-modal__complete p {
+    color: var(--text-muted);
+    margin-bottom: var(--space-5);
+}
+
+@media (max-width: 768px) {
+    .import-modal__stats {
+        flex-wrap: wrap;
+    }
+
+    .import-modal__stat {
+        flex: 1 1 calc(50% - var(--space-2));
+    }
+
+    .import-modal__table {
+        font-size: 12px;
+    }
+
+    .import-modal__table th,
+    .import-modal__table td {
+        padding: var(--space-2);
+    }
+}

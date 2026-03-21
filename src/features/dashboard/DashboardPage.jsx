@@ -1,12 +1,12 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useTransactions } from '../../hooks/useTransactions'
 import { BudgetProgress } from './BudgetProgress'
 import { Card } from '../../components/Shared/Card'
+import { StatCardSkeleton } from '../../components/Shared/Skeleton'
 import { formatCurrency } from '../../utils/currency'
 import { getCurrentMonth } from '../../utils/date'
+import { getBudgets } from '../../services/budgetService'
 import './DashboardPage.css'
-
-const MONTHLY_BUDGET = 2000 // TODO: pull from budgetService
 
 function StatCard({ label, value, sub, accent }) {
   return (
@@ -18,31 +18,65 @@ function StatCard({ label, value, sub, accent }) {
   )
 }
 
+const DEFAULT_BUDGET = 2000
+
 export function DashboardPage() {
   const month = getCurrentMonth()
-  const { transactions, loading } = useTransactions(month)
+  const { transactions, loading: txLoading } = useTransactions(month)
+  const [monthlyBudget, setMonthlyBudget] = useState(DEFAULT_BUDGET)
+  const [loading, setLoading] = useState(true)
+
+  // Fetch budget from service
+  useEffect(() => {
+    async function fetchBudget() {
+      try {
+        const budgets = await getBudgets(month)
+        if (budgets && budgets.length > 0) {
+          // Sum all category budgets for total monthly budget
+          const total = budgets.reduce((sum, b) => sum + Number(b.amount), 0)
+          setMonthlyBudget(total)
+        }
+      } catch (err) {
+        console.error('Error fetching budget:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchBudget()
+  }, [month])
 
   const isRevenue = (t) => ['income', 'revenue'].includes(t.type.toLowerCase())
   const isExpense = (t) => ['expense', 'spending', 'spent'].includes(t.type.toLowerCase())
 
-  // Filter for expenses only for the budget overview
   const totalSpent = transactions
     .filter(isExpense)
     .reduce((sum, t) => sum + Number(t.amount), 0)
-    
+
   const totalRevenue = transactions
     .filter(isRevenue)
     .reduce((sum, t) => sum + Number(t.amount), 0)
 
-  const remaining = Math.max(0, MONTHLY_BUDGET - totalSpent)
+  const remaining = Math.max(0, monthlyBudget - totalSpent)
   const txCount = transactions.length
 
-  // Format month label as 'March 2026'
   const [y, m] = month.split('-')
   const monthLabel = new Date(y, m - 1).toLocaleString('en-US', { month: 'long', year: 'numeric' })
 
-  if (loading) {
-    return <div className="dashboard-loading">Loading dashboard…</div>
+  // Show skeletons while loading
+  if (txLoading || loading) {
+    return (
+      <div className="dashboard">
+        <div className="dashboard__stats">
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+          <StatCardSkeleton />
+        </div>
+        <Card className="dashboard__budget-card">
+          <h2 className="dashboard__section-title">Monthly Budget Overview</h2>
+          <div className="dashboard-loading">Loading budget data...</div>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -52,7 +86,7 @@ export function DashboardPage() {
           label="Total Spent"
           value={formatCurrency(totalSpent)}
           sub={monthLabel}
-          accent={totalSpent > MONTHLY_BUDGET}
+          accent={totalSpent > monthlyBudget}
         />
         <StatCard
           label="Total Revenue"
@@ -60,9 +94,15 @@ export function DashboardPage() {
           sub={monthLabel}
         />
         <StatCard
+          label="Net Balance"
+          value={formatCurrency(totalRevenue - totalSpent)}
+          sub={monthLabel}
+          accent={(totalRevenue - totalSpent) < 0}
+        />
+        <StatCard
           label="Transactions"
           value={txCount}
-          sub={`this month`}
+          sub="this month"
         />
       </div>
 
@@ -70,9 +110,15 @@ export function DashboardPage() {
         <h2 className="dashboard__section-title">Monthly Budget Overview</h2>
         <BudgetProgress
           spent={totalSpent}
-          budget={MONTHLY_BUDGET}
+          budget={monthlyBudget}
           month={monthLabel}
         />
+        <div className="dashboard__budget-remaining">
+          <span>Remaining: </span>
+          <strong style={{ color: remaining > 0 ? 'var(--success)' : 'var(--danger)' }}>
+            {formatCurrency(remaining)}
+          </strong>
+        </div>
       </Card>
     </div>
   )

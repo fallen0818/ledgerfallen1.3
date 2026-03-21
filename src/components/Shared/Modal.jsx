@@ -6,8 +6,9 @@ import './Modal.css'
  * @param {boolean} isOpen
  * @param {() => void} onClose
  * @param {string} [title]
+ * @param {'small'|'medium'|'large'|'xlarge'} [size='medium']
  */
-export function Modal({ isOpen, onClose, title, children }) {
+export function Modal({ isOpen, onClose, title, children, size = 'medium' }) {
   // Close on Escape key
   useEffect(() => {
     if (!isOpen) return
@@ -20,7 +21,7 @@ export function Modal({ isOpen, onClose, title, children }) {
 
   return (
     <div className="modal-overlay" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className={`modal modal--${size}`} onClick={(e) => e.stopPropagation()}>
         <div className="modal__header">
           {title && <h2 className="modal__title">{title}</h2>}
           <button className="modal__close" onClick={onClose} aria-label="Close">✕</button>

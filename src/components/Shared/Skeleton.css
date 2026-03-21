@@ -1,0 +1,66 @@
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+.skeleton {
+    background: linear-gradient(90deg,
+            var(--color-skeleton-base, #313244) 25%,
+            var(--color-skeleton-highlight, #45475a) 50%,
+            var(--color-skeleton-base, #313244) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+.card-skeleton {
+    padding: 20px;
+    border-radius: 12px;
+    background: var(--color-surface, #1e1e2e);
+    border: 1px solid var(--color-border, #313244);
+}
+
+.card-skeleton__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.card-skeleton__body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.table-row-skeleton {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    border-bottom: 1px solid var(--color-border, #313244);
+}
+
+.stat-card-skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 20px;
+}
+
+@media (max-width: 768px) {
+    .card-skeleton__header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .table-row-skeleton {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+}
