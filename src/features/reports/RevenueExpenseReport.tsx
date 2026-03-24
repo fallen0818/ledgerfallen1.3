@@ -1,19 +1,29 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Card } from '../../components/Shared/Card'
 import { formatCurrency } from '../../utils/currency'
 import './RevenueExpenseReport.css'
 
-export function RevenueExpenseReport({ transactions }) {
-  const isRevenue = (t) => ['income', 'revenue'].includes(t.type.toLowerCase())
-  const isExpense = (t) => ['expense', 'spending', 'spent'].includes(t.type.toLowerCase())
+interface Transaction {
+  id: string
+  amount: string
+  type: string
+  transaction_date: string
+  description: string
+  category_name: string
+}
+
+export function RevenueExpenseReport({ transactions }: { transactions: Transaction[] }) {
+  const [visibleCount, setVisibleCount] = useState(50)
+  const isRevenue = (t: Transaction) => ['income', 'revenue'].includes(t.type.toLowerCase())
+  const isExpense = (t: Transaction) => ['expense', 'spending', 'spent'].includes(t.type.toLowerCase())
 
   const revenue = transactions
     .filter(isRevenue)
-    .reduce((sum, t) => sum + Number(t.amount), 0)
+    .reduce((sum: number, t: Transaction) => sum + parseFloat(t.amount), 0)
 
   const expenses = transactions
     .filter(isExpense)
-    .reduce((sum, t) => sum + Number(t.amount), 0)
+    .reduce((sum: number, t: Transaction) => sum + parseFloat(t.amount), 0)
 
   const net = revenue - expenses
   const isProfit = net >= 0
@@ -31,7 +41,7 @@ export function RevenueExpenseReport({ transactions }) {
         </Card>
         <Card className={`re-card re-card--net ${isProfit ? 're-card--profit' : 're-card--loss'}`}>
           <span className="re-card__label">Net {isProfit ? 'Income' : 'Loss'}</span>
-          <span className="re-card__value">{isProfit ? '+' : ''}{formatCurrency(net)}</span>
+          <span className="re-card__value">{isProfit ? '+' : ''}{formatCurrency(Math.abs(net))}</span>
         </Card>
       </div>
 
@@ -50,7 +60,7 @@ export function RevenueExpenseReport({ transactions }) {
                 </tr>
               </thead>
               <tbody>
-                {transactions.slice(0, 50).map(tx => (
+                {transactions.slice(0, visibleCount).map((tx: Transaction) => (
                   <tr key={tx.id} className={`re-row--${tx.type.toLowerCase()}`}>
                     <td>{tx.transaction_date}</td>
                     <td>{tx.description}</td>
@@ -61,8 +71,18 @@ export function RevenueExpenseReport({ transactions }) {
                 ))}
               </tbody>
             </table>
-            {transactions.length > 50 && (
-              <p className="re-report__more">Showing first 50 results...</p>
+            {transactions.length > visibleCount && (
+              <div className="re-report__actions">
+                <button
+                  className="re-report__next-btn"
+                  onClick={() => setVisibleCount(prev => prev + 50)}
+                >
+                  Show Next 50
+                </button>
+                <span className="re-report__count">
+                  Showing {visibleCount} of {transactions.length} results
+                </span>
+              </div>
             )}
           </div>
         </Card>

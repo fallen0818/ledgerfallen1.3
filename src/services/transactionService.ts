@@ -1,28 +1,52 @@
 import { supabase } from '../lib/supabase'
 import { getCurrentMonth, getMonthRange } from '../utils/date'
 
+interface Transaction {
+  id: string
+  amount: string
+  category_name: string
+  transaction_date: string
+  type: string
+  description: string
+  user_email: string
+}
+
+interface FilterParams {
+  id?: string
+  startDate?: string
+  endDate?: string
+  category_name?: string
+  type?: string
+}
+
 /**
  * Fetch all transactions for the current user in a given month.
  * @param {string} [month] — 'YYYY-MM', defaults to current month
  */
 export async function getTransactions(month = getCurrentMonth()) {
   const { start, end } = getMonthRange(month)
+  console.log('Filtering transactions for month:', month)
+  console.log('Date range:', { start, end })
+
   const { data, error } = await supabase
     .from('transactions')
-    .select('*')
+    .select('*', { count: 'exact' })
     .gte('transaction_date', start)
     .lte('transaction_date', end)
     .order('transaction_date', { ascending: false })
-  if (error) throw error
+    .range(0, 999) // Remove any default limits by explicitly setting a large range
+
+  if (error) {
+    console.error('Error fetching transactions:', error)
+    throw error
+  }
+
+  console.log('Found transactions:', data?.length || 0)
   return data
 }
 
-/**
- * Fetch transactions with advanced filters.
- * @param {{ id?: string, startDate?: string, endDate?: string, category_name?: string, type?: string }} filters
- */
-export async function getFilteredTransactions(filters = {}) {
-  let query = supabase.from('transactions').select('*')
+export async function getFilteredTransactions(filters: FilterParams = {}) {
+  let query = supabase.from('transactions').select('*', { count: 'exact' })
 
   if (filters.id) {
     query = query.eq('id', filters.id)
@@ -51,17 +75,13 @@ export async function getFilteredTransactions(filters = {}) {
 export async function getAllTransactions() {
   const { data, error } = await supabase
     .from('transactions')
-    .select('*')
+    .select('*', { count: 'exact' })
     .order('transaction_date', { ascending: false })
   if (error) throw error
   return data
 }
 
-/**
- * Insert a new transaction record.
- * @param {{ amount: number, category_name: string, transaction_date: string, type: string, description: string, user_email: string }} transaction
- */
-export async function createTransaction(transaction) {
+export async function createTransaction(transaction: Omit<Transaction, 'id'>): Promise<Transaction> {
   const { data, error } = await supabase
     .from('transactions')
     .insert([transaction])
@@ -71,12 +91,7 @@ export async function createTransaction(transaction) {
   return data
 }
 
-/**
- * Update an existing transaction record.
- * @param {string} id
- * @param {Partial<{ amount: number, category_name: string, transaction_date: string, type: string, description: string, user_email: string }>} updates
- */
-export async function updateTransaction(id, updates) {
+export async function updateTransaction(id: string, updates: Partial<Transaction>): Promise<Transaction> {
   const { data, error } = await supabase
     .from('transactions')
     .update(updates)
@@ -87,11 +102,7 @@ export async function updateTransaction(id, updates) {
   return data
 }
 
-/**
- * Delete a transaction by ID.
- * @param {string} id
- */
-export async function deleteTransaction(id) {
+export async function deleteTransaction(id: string): Promise<void> {
   const { error } = await supabase.from('transactions').delete().eq('id', id)
   if (error) throw error
 }

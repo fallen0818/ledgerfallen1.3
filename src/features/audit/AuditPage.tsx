@@ -5,23 +5,49 @@ import { VarianceReport } from './VarianceReport'
 import { getCurrentMonth } from '../../utils/date'
 import './AuditPage.css'
 
+interface Transaction {
+  id: string
+  type: string
+  amount: string
+  category_name?: string
+  description?: string
+  transaction_date?: string
+}
+
+interface Budget {
+  id: string
+  user_id: string
+  category: string
+  amount: string
+  month: string
+}
+
 export function AuditPage() {
   const [month, setMonth] = useState(getCurrentMonth())
-  const [transactions, setTransactions] = useState([])
-  const [budgets, setBudgets] = useState([])
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [budgets, setBudgets] = useState<Budget[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
     setError(null)
+    console.log('AuditPage - Fetching data for month:', month)
+
     Promise.all([getTransactions(month), getBudgets(month)])
       .then(([txs, budgs]) => {
+        console.log('AuditPage - Data loaded:', { transactions: txs.length, budgets: budgs.length })
         setTransactions(txs)
         setBudgets(budgs)
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
+      .catch((err) => {
+        console.error('AuditPage - Error loading data:', err)
+        setError(err.message)
+      })
+      .finally(() => {
+        console.log('AuditPage - Loading complete')
+        setLoading(false)
+      })
   }, [month])
 
   return (

@@ -1,6 +1,6 @@
 .card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-6);
   backdrop-filter: blur(12px);

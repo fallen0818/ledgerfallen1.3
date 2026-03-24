@@ -14,22 +14,40 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
+  min-width: 0;
+  word-break: break-word;
 }
 
 .re-card__label {
   font-size: 0.875rem;
   color: var(--text-muted);
+  text-align: center;
 }
 
 .re-card__value {
-  font-size: 1.75rem;
+  font-size: 1.25rem;
   font-weight: 700;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
+  text-align: center;
 }
 
-.re-card--revenue .re-card__value { color: var(--success); }
-.re-card--expenses .re-card__value { color: var(--danger); }
-.re-card--profit .re-card__value { color: var(--success); }
-.re-card--loss .re-card__value { color: var(--danger); }
+.re-card--revenue .re-card__value {
+  color: var(--success);
+}
+
+.re-card--expenses .re-card__value {
+  color: var(--danger);
+}
+
+.re-card--profit .re-card__value {
+  color: var(--success);
+}
+
+.re-card--loss .re-card__value {
+  color: var(--danger);
+}
 
 .re-report__breakdown {
   padding: var(--space-6);
@@ -54,20 +72,32 @@
   color: var(--text-muted);
   text-transform: uppercase;
   font-size: 0.75rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .re-table td {
   padding: var(--space-4) var(--space-2);
   border-bottom: 1px solid var(--border);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
 }
 
 .re-amount {
   font-weight: 600;
   text-align: right;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-.re-row--income .re-amount { color: var(--success); }
-.re-row--expense .re-amount { color: var(--danger); }
+.re-row--income .re-amount {
+  color: var(--success);
+}
+
+.re-row--expense .re-amount {
+  color: var(--danger);
+}
 
 .re-tag {
   background: var(--surface);
@@ -75,6 +105,8 @@
   padding: 2px 8px;
   border-radius: 4px;
   font-size: 0.75rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .re-report__more {
@@ -82,4 +114,33 @@
   color: var(--text-muted);
   margin-top: var(--space-4);
   font-size: 0.875rem;
+}
+
+.re-report__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.re-report__next-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.re-report__next-btn:hover {
+  background: var(--primary-hover);
+}
+
+.re-report__count {
+  font-size: 0.875rem;
+  color: var(--text-muted);
 }

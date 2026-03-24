@@ -9,10 +9,14 @@ import { useToast } from '../../components/Shared/Toast'
 import { getCurrentMonth } from '../../utils/date'
 import { useAuth } from '../../hooks/useAuth'
 import { exportTransactionsToCSV } from '../../utils/exportUtils'
+import { useSidebarFilters } from '../../components/Layout/AppLayout'
 import './ExpensesPage.css'
 
 export function ExpensesPage() {
-  const month = getCurrentMonth()
+  const { selectedMonth, selectedYear } = useSidebarFilters()
+  const month = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
+  console.log('ExpensesPage - selected month/year:', { selectedMonth, selectedYear, month })
+
   const { transactions, loading, addTransaction, editTransaction, removeTransaction } = useTransactions(month)
   const [showForm, setShowForm] = useState(false)
   const [showImport, setShowImport] = useState(false)

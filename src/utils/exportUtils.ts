@@ -3,12 +3,28 @@
  * Supports CSV and PDF (print-based) export
  */
 
+interface Transaction {
+    transaction_date?: string
+    description?: string
+    category_name?: string
+    type?: string
+    amount?: string
+}
+
+interface Summary {
+    revenue: number
+    expenses: number
+    net: number
+    startDate?: string
+    endDate?: string
+}
+
 /**
  * Convert transactions data to CSV format
  * @param {Array} transactions - Array of transaction objects
  * @returns {string} CSV formatted string
  */
-export function transactionsToCSV(transactions) {
+export function transactionsToCSV(transactions: Transaction[]): string {
     if (!transactions || transactions.length === 0) {
         return ''
     }
@@ -36,7 +52,7 @@ export function transactionsToCSV(transactions) {
  * @param {string} csvContent - CSV formatted string
  * @param {string} filename - Name of the file (without extension)
  */
-export function exportToCSV(csvContent, filename = 'report') {
+export function exportToCSV(csvContent: string, filename: string = 'report'): void {
     if (!csvContent) {
         console.error('No data to export')
         return
@@ -70,7 +86,7 @@ export function exportToCSV(csvContent, filename = 'report') {
  * @param {Object} summary - Summary object with revenue, expenses, net
  * @param {string} filename - Name of the file (without extension)
  */
-export function exportSummaryToCSV(summary, filename = 'financial_summary') {
+export function exportSummaryToCSV(summary: Summary, filename: string = 'financial_summary'): void {
     const { revenue, expenses, net, startDate, endDate } = summary
 
     const csvContent = [
@@ -91,7 +107,7 @@ export function exportSummaryToCSV(summary, filename = 'financial_summary') {
  * Open print dialog for PDF export
  * Uses browser's print functionality with print-specific CSS
  */
-export function exportToPDF() {
+export function exportToPDF(): void {
     window.print()
 }
 
@@ -102,7 +118,7 @@ export function exportToPDF() {
  * @param {string} format - 'csv' or 'pdf'
  * @param {string} filename - Base filename
  */
-export function exportReport(transactions, summary, format = 'csv', filename = 'report') {
+export function exportReport(transactions: Transaction[], summary: Summary, format: string = 'csv', filename: string = 'report'): void {
     if (format.toLowerCase() === 'csv') {
         // Export detailed transactions
         const csvData = transactionsToCSV(transactions)
@@ -122,7 +138,7 @@ export function exportReport(transactions, summary, format = 'csv', filename = '
  * @param {Array} transactions - Array of transaction objects
  * @param {string} filename - Name of the file (without extension)
  */
-export function exportTransactionsToCSV(transactions, filename = 'transactions') {
+export function exportTransactionsToCSV(transactions: Transaction[], filename: string = 'transactions'): void {
     if (!transactions || transactions.length === 0) {
         console.error('No transactions to export')
         return

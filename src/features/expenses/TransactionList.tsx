@@ -5,6 +5,16 @@ import { Button } from '../../components/Shared/Button'
 import { ConfirmDialog } from '../../components/Shared/ConfirmDialog'
 import './TransactionList.css'
 
+interface Transaction {
+  id: string
+  description: string
+  category_name: string
+  type: string
+  transaction_date: string
+  user_email: string
+  amount: string
+}
+
 /**
  * Trashcan Icon Component (Inline SVG)
  */
@@ -37,12 +47,15 @@ const SearchIcon = () => (
   </svg>
 )
 
-/**
- * @param {{ transactions: Array, loading: boolean, onDelete: (id: string) => void, onEdit: (tx: object) => void }} props
- */
-export function TransactionList({ transactions, loading, onDelete, onEdit }) {
+export function TransactionList({ transactions, loading, onDelete, onEdit }: {
+  transactions: Transaction[]
+  loading: boolean
+  onDelete: (id: string) => void
+  onEdit: (tx: Transaction) => void
+}) {
   const [searchQuery, setSearchQuery] = useState('')
-  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, tx: null, loading: false })
+  const [visibleCount, setVisibleCount] = useState(50)
+  const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, tx: null as Transaction | null, loading: false })
 
   // Filter transactions based on search query
   const filteredTransactions = useMemo(() => {
@@ -58,7 +71,26 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }) {
     )
   }, [transactions, searchQuery])
 
-  const handleDeleteClick = (tx) => {
+  // Calculate totals
+  const totals = useMemo(() => {
+    const totalRevenue = transactions
+      .filter(tx => ['income', 'revenue'].includes(tx.type.toLowerCase()))
+      .reduce((sum, tx) => sum + parseFloat(tx.amount), 0)
+
+    const totalExpenses = transactions
+      .filter(tx => ['expense', 'spending', 'spent'].includes(tx.type.toLowerCase()))
+      .reduce((sum, tx) => sum + parseFloat(tx.amount), 0)
+
+    const net = totalRevenue - totalExpenses
+
+    return {
+      revenue: totalRevenue,
+      expenses: totalExpenses,
+      net
+    }
+  }, [transactions])
+
+  const handleDeleteClick = (tx: Transaction) => {
     setDeleteConfirm({ isOpen: true, tx, loading: false })
   }
 
@@ -84,6 +116,28 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }) {
 
   return (
     <>
+      {/* Summary Cards */}
+      <div className="tx-list__summary">
+        <div className="tx-summary-card">
+          <div className="tx-summary-card__label">Total Revenue</div>
+          <div className="tx-summary-card__value tx-summary-card__value--revenue">
+            {formatCurrency(totals.revenue)}
+          </div>
+        </div>
+        <div className="tx-summary-card">
+          <div className="tx-summary-card__label">Total Expenses</div>
+          <div className="tx-summary-card__value tx-summary-card__value--expenses">
+            {formatCurrency(totals.expenses)}
+          </div>
+        </div>
+        <div className="tx-summary-card">
+          <div className="tx-summary-card__label">Net Balance</div>
+          <div className={`tx-summary-card__value ${totals.net >= 0 ? 'tx-summary-card__value--positive' : 'tx-summary-card__value--negative'}`}>
+            {totals.net >= 0 ? '+' : ''}{formatCurrency(Math.abs(totals.net))}
+          </div>
+        </div>
+      </div>
+
       {/* Search Bar */}
       <div className="tx-list__search">
         <div className="tx-list__search-wrapper">
@@ -126,7 +180,7 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }) {
             No transactions match your search.
           </div>
         ) : (
-          filteredTransactions.map((tx) => (
+          filteredTransactions.slice(0, visibleCount).map((tx) => (
             <div key={tx.id} className="tx-list__row">
               <span className="tx-list__desc" title={tx.description}>{tx.description || '—'}</span>
               <span className="tx-list__badge">{tx.category_name}</span>
@@ -135,7 +189,7 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }) {
               </span>
               <span className="tx-list__date">{formatDate(tx.transaction_date)}</span>
               <span className="tx-list__email tx-list__hide-mobile" title={tx.user_email}>{tx.user_email || '—'}</span>
-              <span className="tx-list__amount">{formatCurrency(tx.amount)}</span>
+              <span className="tx-list__amount">{formatCurrency(parseFloat(tx.amount))}</span>
               <div className="tx-list__actions">
                 <Button
                   variant="ghost"
@@ -158,6 +212,21 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }) {
           ))
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {filteredTransactions.length > visibleCount && (
+        <div className="tx-list__pagination">
+          <button
+            className="tx-list__next-btn"
+            onClick={() => setVisibleCount(prev => prev + 50)}
+          >
+            Show Next 50
+          </button>
+          <span className="tx-list__count">
+            Showing {visibleCount} of {filteredTransactions.length} transactions
+          </span>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

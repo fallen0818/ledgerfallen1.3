@@ -202,8 +202,82 @@
 .tx-list__empty {
   text-align: center;
   color: var(--text-muted);
+  padding: var(--space-6);
   font-size: 0.9rem;
-  padding: var(--space-8);
+}
+
+.tx-list__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+}
+
+.tx-list__next-btn {
+  background: var(--primary);
+  color: white;
+  border: none;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tx-list__next-btn:hover {
+  background: var(--primary-hover);
+}
+
+.tx-list__count {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.tx-list__summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.tx-summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-align: center;
+}
+
+.tx-summary-card__label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+
+.tx-summary-card__value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.3;
+}
+
+.tx-summary-card__value--revenue {
+  color: var(--success);
+}
+
+.tx-summary-card__value--expenses {
+  color: var(--danger);
+}
+
+.tx-summary-card__value--positive {
+  color: var(--success);
+}
+
+.tx-summary-card__value--negative {
+  color: var(--danger);
 }
 
 /* Responsive Design */
