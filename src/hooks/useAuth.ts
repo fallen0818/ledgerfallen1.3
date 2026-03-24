@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { User } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import { logout } from '../features/auth/authService'
 
@@ -7,7 +8,7 @@ import { logout } from '../features/auth/authService'
  * Returns the current user, loading state, and a signOut helper.
  */
 export function useAuth() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

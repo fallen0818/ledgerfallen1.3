@@ -1,15 +1,22 @@
-import React, { useState, createContext, useContext } from 'react'
+import { useState, createContext, useContext } from 'react'
 import { Outlet } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
 import './AppLayout.css'
 
 // Create context for sidebar filters
-const SidebarContext = createContext({
+interface SidebarFiltersContext {
+  selectedMonth: number
+  selectedYear: number
+  setSelectedMonth: (month: number) => void
+  setSelectedYear: (year: number) => void
+}
+
+const SidebarContext = createContext<SidebarFiltersContext>({
   selectedMonth: new Date().getMonth(),
   selectedYear: new Date().getFullYear(),
-  setSelectedMonth: (month: number) => { },
-  setSelectedYear: (year: number) => { }
+  setSelectedMonth: () => { },
+  setSelectedYear: () => { }
 })
 
 export const useSidebarFilters = () => useContext(SidebarContext)

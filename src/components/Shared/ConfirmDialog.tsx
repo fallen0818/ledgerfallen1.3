@@ -3,19 +3,18 @@ import { Modal } from './Modal'
 import { Button } from './Button'
 import './ConfirmDialog.css'
 
-/**
- * @param {{ 
- *   isOpen: boolean, 
- *   onClose: () => void, 
- *   onConfirm: () => void,
- *   title: string,
- *   message: string,
- *   confirmText?: string,
- *   cancelText?: string,
- *   variant?: 'danger' | 'warning',
- *   loading?: boolean
- * }} props
- */
+interface ConfirmDialogProps {
+    isOpen: boolean
+    onClose: () => void
+    onConfirm: () => void
+    title?: string
+    message?: string
+    confirmText?: string
+    cancelText?: string
+    variant?: 'danger' | 'warning'
+    loading?: boolean
+}
+
 export function ConfirmDialog({
     isOpen,
     onClose,
@@ -26,7 +25,7 @@ export function ConfirmDialog({
     cancelText = 'Cancel',
     variant = 'danger',
     loading = false
-}) {
+}: ConfirmDialogProps) {
     return (
         <Modal isOpen={isOpen} onClose={onClose} title={title}>
             <div className="confirm-dialog">

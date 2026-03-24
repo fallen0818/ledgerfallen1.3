@@ -30,7 +30,7 @@ export function useTheme() {
     // Listen for system preference changes
     useEffect(() => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-        const handleChange = (e) => {
+        const handleChange = (e: MediaQueryListEvent) => {
             const saved = localStorage.getItem(THEME_KEY)
             // Only auto-switch if user hasn't set a preference
             if (!saved) {
@@ -41,7 +41,7 @@ export function useTheme() {
         return () => mediaQuery.removeEventListener('change', handleChange)
     }, [])
 
-    const setTheme = useCallback((newTheme) => {
+    const setTheme = useCallback((newTheme: 'light' | 'dark') => {
         setThemeState(newTheme)
     }, [])
 

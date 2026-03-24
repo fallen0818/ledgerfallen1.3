@@ -7,7 +7,13 @@ import './ProgressBar.css'
  * @param {string} [color] — CSS color string; defaults to --accent
  * @param {string} [label]
  */
-export function ProgressBar({ value = 0, color, label }) {
+interface ProgressBarProps {
+  value?: number
+  color?: string
+  label?: string
+}
+
+export function ProgressBar({ value = 0, color, label }: ProgressBarProps) {
   const clamped = Math.min(100, Math.max(0, value))
   const isOverBudget = clamped >= 100
 

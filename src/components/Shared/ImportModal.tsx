@@ -6,17 +6,57 @@ import { importFromFile, downloadCSVTemplate } from '../../utils/importUtils'
 import { formatCurrency } from '../../utils/currency'
 import './ImportModal.css'
 
-/**
- * Import Modal Component
- * @param {{ isOpen: boolean, onClose: () => void, onImport: (transactions: Array) => Promise<void> }} props
- */
-export function ImportModal({ isOpen, onClose, onImport }) {
+interface TransactionImport {
+    rowIndex: number
+    transaction_date: string
+    description: string
+    category_name: string
+    type: string
+    amount: number
+    errors?: string[]
+}
+
+interface ImportTransaction {
+    amount?: number | string
+    description?: string
+    transaction_date?: string
+    category_name?: string
+    type?: string
+    user_email?: string
+    rowIndex?: number
+    errors?: string[]
+}
+
+interface CSVValidationResult {
+    valid: TransactionImport[]
+    invalid: Array<TransactionImport & { rowIndex: number; errors: string[] }>
+    errors: string[]
+    totalValid: number
+    totalInvalid: number
+    totalRows: number
+}
+
+interface ImportResult {
+    success: boolean
+    transactions?: ImportTransaction[]
+    validation?: CSVValidationResult
+    rawData?: ImportTransaction[]
+    error?: string
+}
+
+interface ImportModalProps {
+    isOpen: boolean
+    onClose: () => void
+    onImport: (transactions: TransactionImport[]) => Promise<void>
+}
+
+export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
     const [step, setStep] = useState('upload') // 'upload' | 'preview' | 'importing' | 'complete'
-    const [importData, setImportData] = useState(null)
-    const [selectedRows, setSelectedRows] = useState(new Set())
+    const [importData, setImportData] = useState<ImportResult | null>(null)
+    const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
     const [loading, setLoading] = useState(false)
-    const [error, setError] = useState(null)
-    const fileInputRef = useRef(null)
+    const [error, setError] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
     const toast = useToast()
 
     const resetState = () => {
@@ -32,7 +72,7 @@ export function ImportModal({ isOpen, onClose, onImport }) {
         onClose()
     }
 
-    const handleFileSelect = async (e) => {
+    const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0]
         if (!selectedFile) return
 
@@ -44,17 +84,19 @@ export function ImportModal({ isOpen, onClose, onImport }) {
         if (result.success) {
             setImportData(result)
             // Select all valid rows by default
-            const allValidIndexes = new Set(result.validation.valid.map(tx => tx.rowIndex))
-            setSelectedRows(allValidIndexes)
+            if (result.validation) {
+                const allValidIndexes = new Set(result.validation.valid.map(tx => tx.rowIndex))
+                setSelectedRows(allValidIndexes)
+            }
             setStep('preview')
         } else {
-            setError(result.error)
+            setError(result.error || 'Failed to process file')
         }
 
         setLoading(false)
     }
 
-    const handleDrop = async (e) => {
+    const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
         const droppedFile = e.dataTransfer.files?.[0]
         if (droppedFile) {
@@ -65,22 +107,24 @@ export function ImportModal({ isOpen, onClose, onImport }) {
 
             if (result.success) {
                 setImportData(result)
-                const allValidIndexes = new Set(result.validation.valid.map(tx => tx.rowIndex))
-                setSelectedRows(allValidIndexes)
+                if (result.validation) {
+                    const allValidIndexes = new Set(result.validation.valid.map(tx => tx.rowIndex))
+                    setSelectedRows(allValidIndexes)
+                }
                 setStep('preview')
             } else {
-                setError(result.error)
+                setError(result.error || 'Failed to process file')
             }
 
             setLoading(false)
         }
     }
 
-    const handleDragOver = (e) => {
+    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
         e.preventDefault()
     }
 
-    const toggleRow = (rowIndex) => {
+    const toggleRow = (rowIndex: number) => {
         const newSelected = new Set(selectedRows)
         if (newSelected.has(rowIndex)) {
             newSelected.delete(rowIndex)
@@ -91,16 +135,16 @@ export function ImportModal({ isOpen, onClose, onImport }) {
     }
 
     const toggleAllRows = () => {
-        if (importData && selectedRows.size === importData.validation.valid.length) {
+        if (importData?.validation && selectedRows.size === importData.validation.valid.length) {
             setSelectedRows(new Set())
-        } else if (importData) {
+        } else if (importData?.validation) {
             const allValidIndexes = new Set(importData.validation.valid.map(tx => tx.rowIndex))
             setSelectedRows(allValidIndexes)
         }
     }
 
     const handleImport = async () => {
-        if (!importData) return
+        if (!importData?.validation) return
 
         const selectedTransactions = importData.validation.valid.filter(
             tx => selectedRows.has(tx.rowIndex)
@@ -119,7 +163,7 @@ export function ImportModal({ isOpen, onClose, onImport }) {
             setStep('complete')
             toast.success(`Successfully imported ${selectedTransactions.length} transactions!`)
         } catch (err) {
-            setError('Failed to import transactions: ' + err.message)
+            setError('Failed to import transactions: ' + (err as Error).message)
             setStep('preview')
         }
 
@@ -191,7 +235,7 @@ export function ImportModal({ isOpen, onClose, onImport }) {
     )
 
     const renderPreviewStep = () => {
-        if (!importData) return null
+        if (!importData?.validation) return null
         const { validation } = importData
         const selectedCount = selectedRows.size
 
@@ -267,7 +311,7 @@ export function ImportModal({ isOpen, onClose, onImport }) {
                             {validation.invalid.slice(0, 5).map((tx) => (
                                 <div key={tx.rowIndex} className="import-modal__invalid-item">
                                     <span>Row {tx.rowIndex}:</span>
-                                    <span>{tx.errors.join(', ')}</span>
+                                    <span>{tx.errors?.join(', ') || 'No errors specified'}</span>
                                 </div>
                             ))}
                             {validation.invalid.length > 5 && (

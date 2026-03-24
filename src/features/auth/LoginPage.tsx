@@ -6,20 +6,20 @@ import './AuthPage.css'
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState<boolean>(false)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault()
     setError(null)
     setLoading(true)
     try {
       await login(email, password)
       navigate('/')
-    } catch (err) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }

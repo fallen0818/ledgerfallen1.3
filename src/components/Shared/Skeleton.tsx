@@ -5,7 +5,14 @@ import './Skeleton.css'
  * Loading skeleton component
  * @param {{ width?: string, height?: string, borderRadius?: string, className?: string }} props
  */
-export function Skeleton({ width = '100%', height = '20px', borderRadius = '6px', className = '' }) {
+interface SkeletonProps {
+    width?: string
+    height?: string
+    borderRadius?: string
+    className?: string
+}
+
+export function Skeleton({ width = '100%', height = '20px', borderRadius = '6px', className = '' }: SkeletonProps) {
     return (
         <div
             className={`skeleton ${className}`}

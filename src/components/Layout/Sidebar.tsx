@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { getTransactions } from '../../services/transactionService'
-import { getCurrentMonth, getMonthRange } from '../../utils/date'
 import { formatCurrency } from '../../utils/currency'
 import { useSidebarFilters } from './AppLayout'
 import './Sidebar.css'

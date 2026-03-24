@@ -4,10 +4,22 @@ import { getCategories } from '../../services/categoryService'
 import { Button } from '../../components/Shared/Button'
 import './TransactionFilters.css'
 
-export function TransactionFilters({ onFilter }) {
-  const [types, setTypes] = useState([])
-  const [categories, setCategories] = useState([])
-  const [filters, setFilters] = useState({
+interface FilterState {
+  id: string
+  startDate: string
+  endDate: string
+  type: string
+  category_name: string
+}
+
+interface TransactionFiltersProps {
+  onFilter: (filters: FilterState) => void
+}
+
+export function TransactionFilters({ onFilter }: TransactionFiltersProps) {
+  const [types, setTypes] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [filters, setFilters] = useState<FilterState>({
     id: '',
     startDate: '',
     endDate: '',
@@ -23,12 +35,12 @@ export function TransactionFilters({ onFilter }) {
       })
   }, [])
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFilters(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     onFilter(filters)
   }
@@ -44,34 +56,34 @@ export function TransactionFilters({ onFilter }) {
       <div className="tx-filters__grid">
         <div className="tx-filter">
           <label className="tx-filter__label">Search ID</label>
-          <input 
-            type="text" 
-            name="id" 
-            value={filters.id} 
-            onChange={handleChange} 
-            placeholder="UUID..." 
+          <input
+            type="text"
+            name="id"
+            value={filters.id}
+            onChange={handleChange}
+            placeholder="UUID..."
             className="tx-filter__input"
           />
         </div>
 
         <div className="tx-filter">
           <label className="tx-filter__label">Date From</label>
-          <input 
-            type="date" 
-            name="startDate" 
-            value={filters.startDate} 
-            onChange={handleChange} 
+          <input
+            type="date"
+            name="startDate"
+            value={filters.startDate}
+            onChange={handleChange}
             className="tx-filter__input"
           />
         </div>
 
         <div className="tx-filter">
           <label className="tx-filter__label">Date To</label>
-          <input 
-            type="date" 
-            name="endDate" 
-            value={filters.endDate} 
-            onChange={handleChange} 
+          <input
+            type="date"
+            name="endDate"
+            value={filters.endDate}
+            onChange={handleChange}
             className="tx-filter__input"
           />
         </div>

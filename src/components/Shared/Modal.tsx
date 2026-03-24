@@ -8,11 +8,19 @@ import './Modal.css'
  * @param {string} [title]
  * @param {'small'|'medium'|'large'|'xlarge'} [size='medium']
  */
-export function Modal({ isOpen, onClose, title, children, size = 'medium' }) {
+interface ModalProps {
+  isOpen: boolean
+  onClose: () => void
+  title?: string
+  children: React.ReactNode
+  size?: 'small' | 'medium' | 'large' | 'xlarge'
+}
+
+export function Modal({ isOpen, onClose, title, children, size = 'medium' }: ModalProps) {
   // Close on Escape key
   useEffect(() => {
     if (!isOpen) return
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [isOpen, onClose])

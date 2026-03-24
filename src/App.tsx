@@ -17,7 +17,7 @@ import { ReportsPage } from './features/reports/ReportsPage'
 // Auth guard
 import { useAuth } from './hooks/useAuth'
 
-function RequireAuth({ children }) {
+function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
   if (loading) return <div className="app-loading">Loading…</div>
   if (!user) return <Navigate to="/login" replace />
@@ -28,7 +28,7 @@ export default function App() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/login"  element={<LoginPage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/signup" element={<SignupPage />} />
 
       {/* Protected app shell */}
@@ -40,10 +40,10 @@ export default function App() {
           </RequireAuth>
         }
       >
-        <Route index          element={<DashboardPage />} />
+        <Route index element={<DashboardPage />} />
         <Route path="expenses" element={<ExpensesPage />} />
-        <Route path="audit"    element={<AuditPage />} />
-        <Route path="reports"  element={<ReportsPage />} />
+        <Route path="audit" element={<AuditPage />} />
+        <Route path="reports" element={<ReportsPage />} />
       </Route>
 
       {/* Fallback */}

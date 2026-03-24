@@ -25,7 +25,7 @@ interface Transaction {
   transaction_date?: string
 }
 
-function StatCard({ label, value, sub, accent, icon }: { label: string; value: string; sub?: string; accent?: boolean; icon?: string }) {
+function StatCard({ label, value, sub, accent, icon }: { label: string; value: string | number; sub?: string; accent?: boolean; icon?: string }) {
   return (
     <Card className={`stat-card ${accent ? 'stat-card--accent' : ''}`}>
       <div className="stat-card__header">

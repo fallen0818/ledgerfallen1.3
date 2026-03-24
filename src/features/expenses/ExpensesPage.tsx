@@ -12,6 +12,15 @@ import { exportTransactionsToCSV } from '../../utils/exportUtils'
 import { useSidebarFilters } from '../../components/Layout/AppLayout'
 import './ExpensesPage.css'
 
+interface Transaction {
+  id: string
+  type: string
+  amount: string
+  category_name?: string
+  description?: string
+  transaction_date?: string
+}
+
 export function ExpensesPage() {
   const { selectedMonth, selectedYear } = useSidebarFilters()
   const month = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
@@ -20,33 +29,33 @@ export function ExpensesPage() {
   const { transactions, loading, addTransaction, editTransaction, removeTransaction } = useTransactions(month)
   const [showForm, setShowForm] = useState(false)
   const [showImport, setShowImport] = useState(false)
-  const [editingTx, setEditingTx] = useState(null)
+  const [editingTx, setEditingTx] = useState<Transaction | null>(null)
   const toast = useToast()
   const { user } = useAuth()
 
-  const handleAdd = async (transactionData) => {
+  const handleAdd = async (transactionData: any) => {
     try {
       await addTransaction(transactionData)
       toast.success('Transaction added successfully!')
       closeModal()
-    } catch (err) {
-      toast.error('Failed to add transaction: ' + err.message)
+    } catch (err: unknown) {
+      toast.error('Failed to add transaction: ' + (err as Error).message)
     }
   }
 
-  const handleEdit = async (transactionData) => {
+  const handleEdit = async (transactionData: any) => {
     if (editingTx) {
       try {
         await editTransaction(editingTx.id, transactionData)
         toast.success('Transaction updated successfully!')
         closeModal()
-      } catch (err) {
-        toast.error('Failed to update transaction: ' + err.message)
+      } catch (err: unknown) {
+        toast.error('Failed to update transaction: ' + (err as Error).message)
       }
     }
   }
 
-  const handleImport = async (importedTransactions) => {
+  const handleImport = async (importedTransactions: any[]) => {
     let successCount = 0
     let errorCount = 0
 
@@ -57,7 +66,7 @@ export function ExpensesPage() {
           user_email: user?.email
         })
         successCount++
-      } catch (err) {
+      } catch (err: unknown) {
         errorCount++
         console.error('Failed to import transaction:', err)
       }
@@ -86,7 +95,7 @@ export function ExpensesPage() {
     setShowForm(true)
   }
 
-  const openEdit = (tx) => {
+  const openEdit = (tx: Transaction) => {
     setEditingTx(tx)
     setShowForm(true)
   }

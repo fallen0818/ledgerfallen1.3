@@ -189,7 +189,7 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }: {
               </span>
               <span className="tx-list__date">{formatDate(tx.transaction_date)}</span>
               <span className="tx-list__email tx-list__hide-mobile" title={tx.user_email}>{tx.user_email || '—'}</span>
-              <span className="tx-list__amount">{formatCurrency(parseFloat(tx.amount))}</span>
+              <span className="tx-list__amount">{formatCurrency(Number(tx.amount))}</span>
               <div className="tx-list__actions">
                 <Button
                   variant="ghost"

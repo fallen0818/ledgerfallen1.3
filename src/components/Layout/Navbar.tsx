@@ -5,7 +5,11 @@ import { useTheme } from '../../hooks/useTheme'
 import { Button } from '../Shared/Button'
 import './Navbar.css'
 
-const PAGE_TITLES = {
+interface PageTitles {
+  [key: string]: string
+}
+
+const PAGE_TITLES: PageTitles = {
   '/': 'Dashboard',
   '/expenses': 'Expenses',
   '/audit': 'Audit Reports',

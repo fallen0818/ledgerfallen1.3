@@ -7,12 +7,29 @@ import { Button } from '../../components/Shared/Button'
 import { useToast } from '../../components/Shared/Toast'
 import './ReportsPage.css'
 
-export function ReportsPage() {
-  const [transactions, setTransactions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+interface Transaction {
+  id: string
+  type: string
+  amount: string
+  category_name?: string
+  description?: string
+  transaction_date?: string
+}
 
-  const [filters, setFilters] = useState({
+interface FilterState {
+  id: string
+  startDate: string
+  endDate: string
+  type: string
+  category_name: string
+}
+
+export function ReportsPage() {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const [filters, setFilters] = useState<FilterState>({
     id: '',
     startDate: '',
     endDate: '',
@@ -30,8 +47,8 @@ export function ReportsPage() {
       try {
         const data = await getFilteredTransactions(filters)
         setTransactions(data)
-      } catch (err) {
-        setError(err.message)
+      } catch (err: unknown) {
+        setError((err as Error).message)
         toast.error('Failed to load report data')
       } finally {
         setLoading(false)

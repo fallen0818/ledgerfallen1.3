@@ -7,14 +7,39 @@ import {
 } from '../services/transactionService'
 import { getCurrentMonth } from '../utils/date'
 
+interface Transaction {
+  id: string
+  amount: string
+  description: string
+  transaction_date: string
+  type_id: string
+  category_id: string
+  created_at: string
+  category_name: string
+  type: string
+  user_email: string
+  [key: string]: any
+}
+
+interface TransactionData {
+  amount: string
+  description: string
+  transaction_date: string
+  type_id: string
+  category_id: string
+  category_name: string
+  type: string
+  user_email: string
+}
+
 /**
  * Hook for managing transactions with optimistic updates.
  * @param {string} [month] — 'YYYY-MM'
  */
-export function useTransactions(month = getCurrentMonth()) {
-  const [transactions, setTransactions] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+export function useTransactions(month: string = getCurrentMonth()) {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState<boolean>(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchTransactions = useCallback(async () => {
     setLoading(true)
@@ -22,8 +47,8 @@ export function useTransactions(month = getCurrentMonth()) {
     try {
       const data = await getTransactions(month)
       setTransactions(data)
-    } catch (err) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch transactions')
     } finally {
       setLoading(false)
     }
@@ -34,13 +59,16 @@ export function useTransactions(month = getCurrentMonth()) {
   }, [fetchTransactions])
 
   // Optimistic add transaction
-  const addTransaction = useCallback(async (transactionData) => {
+  const addTransaction = useCallback(async (transactionData: TransactionData) => {
     // Create a temporary ID for optimistic update
     const tempId = `temp-${Date.now()}`
-    const optimisticTx = {
+    const optimisticTx: Transaction = {
       id: tempId,
       ...transactionData,
       created_at: new Date().toISOString(),
+      category_name: '', // Will be filled by server
+      type: '', // Will be filled by server
+      user_email: '', // Will be filled by server
     }
 
     // Optimistically add to the list
@@ -50,7 +78,7 @@ export function useTransactions(month = getCurrentMonth()) {
       const created = await createTransaction(transactionData)
       // Replace the optimistic entry with the real one from the server
       setTransactions(prev =>
-        prev.map(t => t.id === tempId ? created : t)
+        prev.map(t => t.id === tempId ? created : t) as Transaction[]
       )
       return created
     } catch (err) {
@@ -61,26 +89,26 @@ export function useTransactions(month = getCurrentMonth()) {
   }, [])
 
   // Optimistic edit transaction
-  const editTransaction = useCallback(async (id, updates) => {
+  const editTransaction = useCallback(async (id: string, updates: Partial<TransactionData>) => {
     // Store the original for rollback
-    let originalTx = null
+    let originalTx: Transaction | null = null
     setTransactions(prev => {
       const tx = prev.find(t => t.id === id)
       if (tx) originalTx = { ...tx }
-      return prev.map(t => t.id === id ? { ...t, ...updates } : t)
+      return prev.map(t => t.id === id ? { ...t, ...updates } : t) as Transaction[]
     })
 
     try {
       const updated = await updateTransaction(id, updates)
       setTransactions(prev =>
-        prev.map(t => t.id === id ? updated : t)
+        prev.map(t => t.id === id ? updated : t) as Transaction[]
       )
       return updated
     } catch (err) {
       // Rollback on error
       if (originalTx) {
         setTransactions(prev =>
-          prev.map(t => t.id === id ? originalTx : t)
+          prev.map(t => t.id === id ? originalTx : t) as Transaction[]
         )
       }
       throw err
@@ -88,9 +116,9 @@ export function useTransactions(month = getCurrentMonth()) {
   }, [])
 
   // Optimistic delete transaction
-  const removeTransaction = useCallback(async (id) => {
+  const removeTransaction = useCallback(async (id: string) => {
     // Store the transaction for rollback
-    let deletedTx = null
+    let deletedTx: Transaction | null = null
     setTransactions(prev => {
       const tx = prev.find(t => t.id === id)
       if (tx) deletedTx = { ...tx }
@@ -102,9 +130,12 @@ export function useTransactions(month = getCurrentMonth()) {
     } catch (err) {
       // Rollback on error
       if (deletedTx) {
-        setTransactions(prev => [deletedTx, ...prev].sort((a, b) =>
-          new Date(b.transaction_date) - new Date(a.transaction_date)
-        ))
+        setTransactions(prev => [deletedTx, ...prev].sort((a, b) => {
+          if (!a || !b) return 0
+          const dateA = new Date(a.transaction_date)
+          const dateB = new Date(b.transaction_date)
+          return dateB.getTime() - dateA.getTime()
+        }) as Transaction[])
       }
       throw err
     }

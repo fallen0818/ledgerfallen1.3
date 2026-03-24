@@ -3,21 +3,31 @@ import React from 'react'
 /**
  * Error Boundary component to catch React errors
  */
-export class ErrorBoundary extends React.Component {
-    constructor(props) {
+interface ErrorBoundaryProps {
+    children: React.ReactNode
+    onReset?: () => void
+}
+
+interface ErrorBoundaryState {
+    hasError: boolean
+    error: Error | null
+}
+
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+    constructor(props: ErrorBoundaryProps) {
         super(props)
         this.state = { hasError: false, error: null }
     }
 
-    static getDerivedStateFromError(error) {
+    static getDerivedStateFromError(error: Error): Partial<ErrorBoundaryState> {
         return { hasError: true, error }
     }
 
-    componentDidCatch(error, errorInfo) {
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
         console.error('Error caught by boundary:', error, errorInfo)
     }
 
-    handleRetry = () => {
+    handleRetry = (): void => {
         this.setState({ hasError: false, error: null })
         if (this.props.onReset) {
             this.props.onReset()

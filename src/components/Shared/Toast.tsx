@@ -1,14 +1,27 @@
 import React, { createContext, useContext, useState, useCallback } from 'react'
 import './Toast.css'
 
-const ToastContext = createContext(null)
+interface Toast {
+    id: number
+    message: string
+    type: 'success' | 'error' | 'info' | 'warning'
+}
+
+interface ToastContextType {
+    success: (msg: string, duration?: number) => number
+    error: (msg: string, duration?: number) => number
+    info: (msg: string, duration?: number) => number
+    warning: (msg: string, duration?: number) => number
+}
+
+const ToastContext = createContext<ToastContextType | null>(null)
 
 let toastId = 0
 
-export function ToastProvider({ children }) {
-    const [toasts, setToasts] = useState([])
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+    const [toasts, setToasts] = useState<Toast[]>([])
 
-    const addToast = useCallback((message, type = 'info', duration = 4000) => {
+    const addToast = useCallback((message: string, type: Toast['type'] = 'info', duration: number = 4000): number => {
         const id = ++toastId
         setToasts(prev => [...prev, { id, message, type }])
         setTimeout(() => {
@@ -17,15 +30,15 @@ export function ToastProvider({ children }) {
         return id
     }, [])
 
-    const removeToast = useCallback((id) => {
+    const removeToast = useCallback((id: number): void => {
         setToasts(prev => prev.filter(t => t.id !== id))
     }, [])
 
-    const toast = {
-        success: (msg, duration) => addToast(msg, 'success', duration),
-        error: (msg, duration) => addToast(msg, 'error', duration),
-        info: (msg, duration) => addToast(msg, 'info', duration),
-        warning: (msg, duration) => addToast(msg, 'warning', duration),
+    const toast: ToastContextType = {
+        success: (msg: string, duration?: number) => addToast(msg, 'success', duration),
+        error: (msg: string, duration?: number) => addToast(msg, 'error', duration),
+        info: (msg: string, duration?: number) => addToast(msg, 'info', duration),
+        warning: (msg: string, duration?: number) => addToast(msg, 'warning', duration),
     }
 
     return (

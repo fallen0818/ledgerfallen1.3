@@ -66,7 +66,7 @@ export function RevenueExpenseReport({ transactions }: { transactions: Transacti
                     <td>{tx.description}</td>
                     <td><span className="re-tag">{tx.category_name}</span></td>
                     <td>{tx.type}</td>
-                    <td className="re-amount">{formatCurrency(tx.amount)}</td>
+                    <td className="re-amount">{formatCurrency(Number(tx.amount))}</td>
                   </tr>
                 ))}
               </tbody>

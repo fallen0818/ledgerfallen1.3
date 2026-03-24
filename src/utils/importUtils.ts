@@ -3,12 +3,31 @@
  * Supports CSV file import
  */
 
+interface TransactionImport {
+    amount?: number | string
+    description?: string
+    transaction_date?: string
+    category_name?: string
+    type?: string
+    user_email?: string
+    [key: string]: any
+}
+
+interface CSVValidationResult {
+    valid: TransactionImport[]
+    invalid: Array<TransactionImport & { rowIndex: number; errors: string[] }>
+    errors: string[]
+    totalValid: number
+    totalInvalid: number
+    totalRows: number
+}
+
 /**
  * Parse CSV content into array of objects
  * @param {string} csvContent - Raw CSV string
  * @returns {Array} Array of transaction objects
  */
-export function parseCSV(csvContent) {
+export function parseCSV(csvContent: string): TransactionImport[] {
     if (!csvContent || typeof csvContent !== 'string') {
         throw new Error('Invalid CSV content')
     }
@@ -25,15 +44,15 @@ export function parseCSV(csvContent) {
     const normalizedHeaders = normalizeHeaders(headers)
 
     // Parse data rows
-    const transactions = []
+    const transactions: TransactionImport[] = []
     for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim()
         if (!line) continue
 
         const values = parseCSVLine(line)
-        const transaction = {}
+        const transaction: TransactionImport = {}
 
-        normalizedHeaders.forEach((header, index) => {
+        normalizedHeaders.forEach((header: string | null, index: number) => {
             if (header && values[index] !== undefined) {
                 transaction[header] = values[index]
             }
@@ -62,8 +81,8 @@ export function parseCSV(csvContent) {
  * @param {string} line - CSV line
  * @returns {Array} Array of values
  */
-function parseCSVLine(line) {
-    const values = []
+function parseCSVLine(line: string): string[] {
+    const values: string[] = []
     let current = ''
     let inQuotes = false
 
@@ -95,8 +114,8 @@ function parseCSVLine(line) {
  * @param {Array} headers - Original headers
  * @returns {Array} Normalized headers
  */
-function normalizeHeaders(headers) {
-    const mapping = {
+function normalizeHeaders(headers: string[]): (string | null)[] {
+    const mapping: Record<string, string> = {
         'date': 'transaction_date',
         'transaction_date': 'transaction_date',
         'created_at': 'transaction_date',
@@ -114,7 +133,7 @@ function normalizeHeaders(headers) {
         'user': 'user_email'
     }
 
-    return headers.map(h => {
+    return headers.map((h: string) => {
         const normalized = h.toLowerCase().replace(/[^a-z0-9_]/g, '').trim()
         return mapping[normalized] || null
     })
@@ -125,7 +144,7 @@ function normalizeHeaders(headers) {
  * @param {string} dateStr - Date string in various formats
  * @returns {string} Normalized date in YYYY-MM-DD format
  */
-function normalizeDate(dateStr) {
+function normalizeDate(dateStr: string): string {
     if (!dateStr) return ''
 
     // Try to parse the date
@@ -158,29 +177,29 @@ function normalizeDate(dateStr) {
  * @param {Object} options - Validation options
  * @returns {Object} Validation result with valid and invalid arrays
  */
-export function validateImport(transactions, options = {}) {
+export function validateImport(transactions: TransactionImport[], options: { requiredFields?: string[]; maxTransactions?: number } = {}): CSVValidationResult {
     const { requiredFields = ['amount', 'transaction_date'], maxTransactions = 1000 } = options
 
-    const valid = []
-    const invalid = []
-    const errors = []
+    const valid: TransactionImport[] = []
+    const invalid: Array<TransactionImport & { rowIndex: number; errors: string[] }> = []
+    const errors: string[] = []
 
     if (transactions.length > maxTransactions) {
         errors.push(`Too many transactions. Maximum allowed: ${maxTransactions}`)
     }
 
-    transactions.forEach((tx, index) => {
-        const rowErrors = []
+    transactions.forEach((tx: TransactionImport, index: number) => {
+        const rowErrors: string[] = []
 
         // Check required fields
-        requiredFields.forEach(field => {
+        requiredFields.forEach((field: string) => {
             if (!tx[field]) {
                 rowErrors.push(`Missing ${field}`)
             }
         })
 
         // Validate amount
-        if (tx.amount !== undefined && (isNaN(tx.amount) || tx.amount < 0)) {
+        if (tx.amount !== undefined && (isNaN(Number(tx.amount)) || Number(tx.amount) < 0)) {
             rowErrors.push('Invalid amount')
         }
 
@@ -216,11 +235,11 @@ export function validateImport(transactions, options = {}) {
  * @param {File} file - File object from input
  * @returns {Promise<string>} File content
  */
-export function readFileAsText(file) {
+export function readFileAsText(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
         const reader = new FileReader()
-        reader.onload = (e) => resolve(e.target.result)
-        reader.onerror = (e) => reject(new Error('Failed to read file'))
+        reader.onload = (e: ProgressEvent<FileReader>) => resolve(e.target?.result as string)
+        reader.onerror = (e: ProgressEvent<FileReader>) => reject(new Error('Failed to read file'))
         reader.readAsText(file)
     })
 }
@@ -231,7 +250,7 @@ export function readFileAsText(file) {
  * @param {Object} options - Import options
  * @returns {Promise<Object>} Import result
  */
-export async function importFromFile(file, options = {}) {
+export async function importFromFile(file: File, options: { requiredFields?: string[]; maxTransactions?: number } = {}): Promise<{ success: boolean; transactions?: TransactionImport[]; validation?: CSVValidationResult; rawData?: TransactionImport[]; error?: string }> {
     try {
         // Check file type
         const validTypes = ['.csv', 'text/csv', 'application/vnd.ms-excel']
@@ -258,10 +277,10 @@ export async function importFromFile(file, options = {}) {
             validation,
             rawData: transactions
         }
-    } catch (error) {
+    } catch (error: unknown) {
         return {
             success: false,
-            error: error.message
+            error: error instanceof Error ? error.message : 'Unknown error occurred'
         }
     }
 }
@@ -300,5 +319,7 @@ export function downloadCSVTemplate(filename = 'transactions_template.csv') {
     link.click()
     document.body.removeChild(link)
 
-    URL.revokeObjectURL(url)
+    if (typeof URL !== 'undefined' && URL.revokeObjectURL) {
+        URL.revokeObjectURL(url)
+    }
 }

@@ -2,15 +2,27 @@ import React from 'react'
 import { formatCurrency } from '../../utils/currency'
 import './VarianceReport.css'
 
-/**
- * Builds a per-category breakdown of budgeted vs. actual spending.
- * @param {{ transactions: Array, budgets: Array }} props
- */
-export function VarianceReport({ transactions, budgets }) {
-  const isExpense = (t) => ['expense', 'spending', 'spent'].includes(t.type.toLowerCase())
+interface Transaction {
+  category_name: string
+  type: string
+  amount: string
+}
+
+interface Budget {
+  category: string
+  amount: string
+}
+
+interface VarianceReportProps {
+  transactions: Transaction[]
+  budgets: Budget[]
+}
+
+export function VarianceReport({ transactions, budgets }: VarianceReportProps) {
+  const isExpense = (t: Transaction) => ['expense', 'spending', 'spent'].includes(t.type.toLowerCase())
 
   // Group only expenses by category (ignore income/revenue for the variance report)
-  const spentByCategory = transactions
+  const spentByCategory: Record<string, number> = transactions
     .filter(isExpense)
     .reduce((acc, t) => {
       acc[t.category_name] = (acc[t.category_name] || 0) + Number(t.amount)
@@ -39,7 +51,7 @@ export function VarianceReport({ transactions, budgets }) {
         <span>Status</span>
       </div>
       {allCategories.map((cat) => {
-        const budgeted = budgets.find((b) => b.category === cat)?.amount ?? 0
+        const budgeted = Number(budgets.find((b) => b.category === cat)?.amount ?? 0)
         const actual = spentByCategory[cat] ?? 0
         const variance = budgeted - actual
         const isOver = variance < 0

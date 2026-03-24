@@ -5,18 +5,21 @@ import { getTypes } from '../../services/typeService'
 import { getCategories } from '../../services/categoryService'
 import './TransactionForm.css'
 
-/**
- * @param {{ onSubmit: (transaction: object) => Promise<void>, onCancel: () => void, initialData?: object }} props
- */
-export function TransactionForm({ onSubmit, onCancel, initialData }) {
+interface TransactionFormProps {
+  onSubmit: (transaction: any) => Promise<void>
+  onCancel: () => void
+  initialData?: any
+}
+
+export function TransactionForm({ onSubmit, onCancel, initialData }: TransactionFormProps) {
   const { user } = useAuth()
   const isEditing = !!initialData
   const today = new Date().toISOString().split('T')[0]
-  
-  const [types, setTypes] = useState([])
-  const [categories, setCategories] = useState([])
+
+  const [types, setTypes] = useState<string[]>([])
+  const [categories, setCategories] = useState<string[]>([])
   const [dataLoading, setDataLoading] = useState(true)
-  const [dataError, setDataError] = useState(null)
+  const [dataError, setDataError] = useState<string | null>(null)
 
   const [form, setForm] = useState({
     amount: initialData?.amount || '',
@@ -26,9 +29,9 @@ export function TransactionForm({ onSubmit, onCancel, initialData }) {
     description: initialData?.description || '',
     user_email: initialData?.user_email || user?.email || '',
   })
-  
+
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
   // Load types and categories on mount
   useEffect(() => {
@@ -36,7 +39,7 @@ export function TransactionForm({ onSubmit, onCancel, initialData }) {
       .then(([fetchedTypes, fetchedCategories]) => {
         setTypes(fetchedTypes)
         setCategories(fetchedCategories)
-        
+
         // Only set defaults if not editing
         if (!isEditing) {
           setForm(prev => ({
@@ -45,7 +48,7 @@ export function TransactionForm({ onSubmit, onCancel, initialData }) {
             category_name: fetchedCategories.length > 0 ? fetchedCategories[0] : '',
           }))
         }
-        
+
         setDataLoading(false)
       })
       .catch(err => {
@@ -55,9 +58,9 @@ export function TransactionForm({ onSubmit, onCancel, initialData }) {
       })
   }, [isEditing])
 
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }))
+  const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm((f) => ({ ...f, [key]: e.target.value }))
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.type || !form.category_name) {
       setError('Please select both a type and a category.')
@@ -66,13 +69,13 @@ export function TransactionForm({ onSubmit, onCancel, initialData }) {
     setError(null)
     setLoading(true)
     try {
-      await onSubmit({ 
-        ...form, 
+      await onSubmit({
+        ...form,
         amount: parseFloat(form.amount),
         user_email: user?.email // Always use the current user's email
       })
-    } catch (err) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError((err as Error).message)
     } finally {
       setLoading(false)
     }

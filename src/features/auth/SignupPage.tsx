@@ -6,13 +6,13 @@ import './AuthPage.css'
 
 export function SignupPage() {
   const navigate = useNavigate()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState(null)
-  const [loading, setLoading] = useState(false)
+  const [email, setEmail] = useState<string>('')
+  const [password, setPassword] = useState<string>('')
+  const [confirm, setConfirm] = useState<string>('')
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState<boolean>(false)
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault()
     if (password !== confirm) {
       setError('Passwords do not match.')
@@ -23,8 +23,8 @@ export function SignupPage() {
     try {
       await signup(email, password)
       navigate('/')
-    } catch (err) {
-      setError(err.message)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
     } finally {
       setLoading(false)
     }
