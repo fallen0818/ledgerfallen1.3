@@ -1,4 +1,3 @@
-import React from 'react'
 import { ProgressBar } from '../../components/Shared/ProgressBar'
 import './BudgetProgress.css'
 import { formatCurrency } from '../../utils/currency'

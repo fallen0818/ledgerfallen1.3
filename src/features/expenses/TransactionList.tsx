@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { formatCurrency } from '../../utils/currency'
 import { formatDate } from '../../utils/date'
 import { Button } from '../../components/Shared/Button'
@@ -67,7 +67,7 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }: {
       tx.category_name?.toLowerCase().includes(query) ||
       tx.type?.toLowerCase().includes(query) ||
       tx.user_email?.toLowerCase().includes(query) ||
-      formatCurrency(tx.amount).toLowerCase().includes(query)
+      formatCurrency(Number(tx.amount)).toLowerCase().includes(query)
     )
   }, [transactions, searchQuery])
 

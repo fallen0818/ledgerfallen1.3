@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import { Card } from '../../components/Shared/Card'
 import { formatCurrency } from '../../utils/currency'
 import './RevenueExpenseReport.css'
@@ -8,7 +8,7 @@ interface Transaction {
   amount: string
   type: string
   transaction_date: string
-  description: string
+  description?: string
   category_name: string
 }
 

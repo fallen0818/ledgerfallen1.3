@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { getTransactions } from '../../services/transactionService'
 import { getBudgets } from '../../services/budgetService'
 import { VarianceReport } from './VarianceReport'
@@ -9,7 +9,7 @@ interface Transaction {
   id: string
   type: string
   amount: string
-  category_name?: string
+  category_name: string
   description?: string
   transaction_date?: string
 }

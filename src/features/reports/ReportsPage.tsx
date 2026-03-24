@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { getFilteredTransactions } from '../../services/transactionService'
 import { TransactionFilters } from './TransactionFilters'
 import { RevenueExpenseReport } from './RevenueExpenseReport'
@@ -11,9 +11,9 @@ interface Transaction {
   id: string
   type: string
   amount: string
-  category_name?: string
+  category_name: string
   description?: string
-  transaction_date?: string
+  transaction_date: string
 }
 
 interface FilterState {

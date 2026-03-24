@@ -1,21 +1,11 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useTransactions } from '../../hooks/useTransactions'
 import { Card } from '../../components/Shared/Card'
 import { StatCardSkeleton } from '../../components/Shared/Skeleton'
 import { formatCurrency } from '../../utils/currency'
 import { getCurrentMonth, getYearRange } from '../../utils/date'
-import { getBudgets, getTotalBudget, upsertBudget } from '../../services/budgetService'
-import { getCategoriesWithId } from '../../services/categoryService'
+import { getTotalBudget } from '../../services/budgetService'
 import './DashboardPage.css'
-
-interface Budget {
-  amount: string
-}
-
-interface Category {
-  id: string
-  name: string
-}
 
 interface Transaction {
   type: string
@@ -66,7 +56,6 @@ export function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
 
-  const currentMonth = getCurrentMonth()
   const yearRange = getYearRange()
 
   // Determine the date range based on timeframe
@@ -77,22 +66,13 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [isEditingBudget, setIsEditingBudget] = useState(false)
   const [budgetInput, setBudgetInput] = useState(DEFAULT_BUDGET.toString())
-  const [categories, setCategories] = useState<Category[]>([])
-  const [selectedCategory, setSelectedCategory] = useState('')
 
   // Fetch budget and categories from services
   useEffect(() => {
     async function fetchData() {
       try {
-        // Get user ID from localStorage or context
-        const userId = localStorage.getItem('user_id') || 'default-user'
-
-        // Fetch categories
-        const categoryData = await getCategoriesWithId()
-        setCategories(categoryData)
-
         // Fetch total budget
-        const total = await getTotalBudget(userId, dateRange)
+        const total = await getTotalBudget('default-user', dateRange)
 
         if (total > 0) {
           setMonthlyBudget(total)
@@ -119,22 +99,6 @@ export function DashboardPage() {
     }
 
     try {
-      // Get user ID from localStorage or context
-      const userId = localStorage.getItem('user_id') || 'default-user'
-
-      // If a category is selected, save budget for that category
-      if (selectedCategory) {
-        const category = categories.find(c => c.id === selectedCategory)
-        if (category) {
-          await upsertBudget({
-            user_id: userId,
-            category: category.name,
-            amount: newBudget.toString(),
-            month: dateRange
-          })
-        }
-      }
-
       // Update local state
       setMonthlyBudget(newBudget)
       setIsEditingBudget(false)

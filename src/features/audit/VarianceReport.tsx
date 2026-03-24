@@ -1,4 +1,3 @@
-import React from 'react'
 import { formatCurrency } from '../../utils/currency'
 import './VarianceReport.css'
 
@@ -25,9 +24,9 @@ export function VarianceReport({ transactions, budgets }: VarianceReportProps) {
   const spentByCategory: Record<string, number> = transactions
     .filter(isExpense)
     .reduce((acc, t) => {
-      acc[t.category_name] = (acc[t.category_name] || 0) + Number(t.amount)
+      acc[t.category_name] = (acc[t.category_name] ?? 0) + Number(t.amount)
       return acc
-    }, {})
+    }, {} as Record<string, number>)
 
   // Collect all categories (from both budgets and expenses)
   const allCategories = [

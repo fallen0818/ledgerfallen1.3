@@ -6,16 +6,6 @@ import { importFromFile, downloadCSVTemplate } from '../../utils/importUtils'
 import { formatCurrency } from '../../utils/currency'
 import './ImportModal.css'
 
-interface TransactionImport {
-    rowIndex: number
-    transaction_date: string
-    description: string
-    category_name: string
-    type: string
-    amount: number
-    errors?: string[]
-}
-
 interface ImportTransaction {
     amount?: number | string
     description?: string
@@ -23,13 +13,13 @@ interface ImportTransaction {
     category_name?: string
     type?: string
     user_email?: string
-    rowIndex?: number
+    rowIndex: number
     errors?: string[]
 }
 
 interface CSVValidationResult {
-    valid: TransactionImport[]
-    invalid: Array<TransactionImport & { rowIndex: number; errors: string[] }>
+    valid: ImportTransaction[]
+    invalid: Array<ImportTransaction & { rowIndex: number; errors: string[] }>
     errors: string[]
     totalValid: number
     totalInvalid: number
@@ -47,7 +37,7 @@ interface ImportResult {
 interface ImportModalProps {
     isOpen: boolean
     onClose: () => void
-    onImport: (transactions: TransactionImport[]) => Promise<void>
+    onImport: (transactions: ImportTransaction[]) => Promise<void>
 }
 
 export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
@@ -82,10 +72,35 @@ export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
         const result = await importFromFile(selectedFile)
 
         if (result.success) {
-            setImportData(result)
+            // Convert TransactionImport to ImportTransaction with rowIndex
+            const convertedResult: ImportResult = {
+                success: result.success,
+                transactions: result.transactions?.map((tx, index) => ({
+                    ...tx,
+                    rowIndex: index + 2 // Start from row 2 (after header)
+                })),
+                validation: result.validation ? {
+                    ...result.validation,
+                    valid: result.validation.valid.map((tx, index) => ({
+                        ...tx,
+                        rowIndex: index + 2 // Start from row 2 (after header)
+                    })),
+                    invalid: result.validation.invalid.map((tx, index) => ({
+                        ...tx,
+                        rowIndex: index + 2 // Start from row 2 (after header)
+                    }))
+                } : undefined,
+                rawData: result.rawData?.map((tx, index) => ({
+                    ...tx,
+                    rowIndex: index + 2 // Start from row 2 (after header)
+                })),
+                error: result.error
+            }
+
+            setImportData(convertedResult)
             // Select all valid rows by default
-            if (result.validation) {
-                const allValidIndexes = new Set(result.validation.valid.map(tx => tx.rowIndex))
+            if (convertedResult.validation) {
+                const allValidIndexes = new Set(convertedResult.validation.valid.map(tx => tx.rowIndex))
                 setSelectedRows(allValidIndexes)
             }
             setStep('preview')
@@ -106,9 +121,33 @@ export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
             const result = await importFromFile(droppedFile)
 
             if (result.success) {
-                setImportData(result)
-                if (result.validation) {
-                    const allValidIndexes = new Set(result.validation.valid.map(tx => tx.rowIndex))
+                // Convert TransactionImport to ImportTransaction with rowIndex
+                const convertedResult = {
+                    ...result,
+                    transactions: result.transactions?.map((tx, index) => ({
+                        ...tx,
+                        rowIndex: index + 2 // Start from row 2 (after header)
+                    })),
+                    validation: result.validation ? {
+                        ...result.validation,
+                        valid: result.validation.valid.map((tx, index) => ({
+                            ...tx,
+                            rowIndex: index + 2 // Start from row 2 (after header)
+                        })),
+                        invalid: result.validation.invalid.map((tx, index) => ({
+                            ...tx,
+                            rowIndex: index + 2 // Start from row 2 (after header)
+                        }))
+                    } : undefined,
+                    rawData: result.rawData?.map((tx, index) => ({
+                        ...tx,
+                        rowIndex: index + 2 // Start from row 2 (after header)
+                    }))
+                }
+
+                setImportData(convertedResult)
+                if (convertedResult.validation) {
+                    const allValidIndexes = new Set(convertedResult.validation.valid.map(tx => tx.rowIndex))
                     setSelectedRows(allValidIndexes)
                 }
                 setStep('preview')
@@ -297,7 +336,7 @@ export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
                                             {tx.type || '—'}
                                         </span>
                                     </td>
-                                    <td className="amount-cell">{formatCurrency(tx.amount)}</td>
+                                    <td className="amount-cell">{formatCurrency(typeof tx.amount === 'number' ? tx.amount : parseFloat(tx.amount ?? '0'))}</td>
                                 </tr>
                             ))}
                         </tbody>
