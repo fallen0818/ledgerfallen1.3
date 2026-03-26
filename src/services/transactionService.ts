@@ -20,12 +20,26 @@ interface FilterParams {
 }
 
 /**
- * Fetch all transactions for the current user in a given month.
- * @param {string} [month] — 'YYYY-MM', defaults to current month
+ * Fetch all transactions for the current user in a given month or year.
+ * @param {string} [dateRange] — 'YYYY-MM' for month or 'YYYY' for year, defaults to current month
  */
-export async function getTransactions(month = getCurrentMonth()) {
-  const { start, end } = getMonthRange(month)
-  console.log('Filtering transactions for month:', month)
+export async function getTransactions(dateRange = getCurrentMonth()) {
+  let start: string, end: string
+
+  // Check if the dateRange is a year (YYYY format) or month (YYYY-MM format)
+  if (dateRange.length === 4) {
+    // Year format: YYYY
+    start = `${dateRange}-01-01`
+    end = `${dateRange}-12-31`
+    console.log('Filtering transactions for year:', dateRange)
+  } else {
+    // Month format: YYYY-MM
+    const { start: monthStart, end: monthEnd } = getMonthRange(dateRange)
+    start = monthStart
+    end = monthEnd
+    console.log('Filtering transactions for month:', dateRange)
+  }
+
   console.log('Date range:', { start, end })
 
   const { data, error } = await supabase

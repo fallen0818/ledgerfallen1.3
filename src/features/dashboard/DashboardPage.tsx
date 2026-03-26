@@ -2,17 +2,22 @@ import { useState, useEffect } from 'react'
 import { useTransactions } from '../../hooks/useTransactions'
 import { Card } from '../../components/Shared/Card'
 import { StatCardSkeleton } from '../../components/Shared/Skeleton'
-import { formatCurrency } from '../../utils/currency'
-import { getCurrentMonth, getYearRange } from '../../utils/date'
-import { getTotalBudget } from '../../services/budgetService'
+import { formatCurrency, formatNumberWithSeparators } from '../../utils/currency'
+import { getCurrentMonth, getYearRange, getYearsRange } from '../../utils/date'
+import { getTotalBudget, getBudgetCategories, upsertBudget } from '../../services/budgetService'
 import './DashboardPage.css'
 
 interface Transaction {
-  type: string
+  id: string
   amount: string
-  category_name?: string
-  description?: string
-  transaction_date?: string
+  description: string
+  transaction_date: string
+  type_id: string
+  category_id: string
+  created_at: string
+  category_name: string
+  type: string
+  user_email: string
 }
 
 function StatCard({ label, value, sub, accent, icon }: { label: string; value: string | number; sub?: string; accent?: boolean; icon?: string }) {
@@ -57,22 +62,25 @@ export function DashboardPage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
 
   const yearRange = getYearRange()
+  const yearsRange = getYearsRange()
 
   // Determine the date range based on timeframe
-  const dateRange = timeframe === 'monthly' ? selectedMonth : `${selectedYear}-01`
+  const dateRange = timeframe === 'monthly' ? selectedMonth : selectedYear.toString()
 
-  const { transactions, loading: txLoading } = useTransactions(dateRange)
+  const { transactions = [], loading: txLoading = true } = useTransactions(dateRange)
   const [monthlyBudget, setMonthlyBudget] = useState(DEFAULT_BUDGET)
   const [loading, setLoading] = useState(true)
   const [isEditingBudget, setIsEditingBudget] = useState(false)
   const [budgetInput, setBudgetInput] = useState(DEFAULT_BUDGET.toString())
+  const [isEditingCategoryBudgets, setIsEditingCategoryBudgets] = useState(false)
+  const [categoryBudgets, setCategoryBudgets] = useState<Record<string, number>>({})
 
   // Fetch budget and categories from services
   useEffect(() => {
     async function fetchData() {
       try {
         // Fetch total budget
-        const total = await getTotalBudget('default-user', dateRange)
+        const total = await getTotalBudget('f4e2af28-f270-4c19-90a8-81e85280b628', dateRange)
 
         if (total > 0) {
           setMonthlyBudget(total)
@@ -89,6 +97,23 @@ export function DashboardPage() {
       }
     }
     fetchData()
+  }, [dateRange])
+
+  // Initialize category budgets with existing data
+  useEffect(() => {
+    async function loadCategoryBudgets() {
+      try {
+        const budgets = await getBudgetCategories('f4e2af28-f270-4c19-90a8-81e85280b628', dateRange)
+        const budgetMap: Record<string, number> = {}
+        budgets.forEach(budget => {
+          budgetMap[budget.category] = parseFloat(budget.amount)
+        })
+        setCategoryBudgets(budgetMap)
+      } catch (err) {
+        console.error('Error loading category budgets:', err)
+      }
+    }
+    loadCategoryBudgets()
   }, [dateRange])
 
   const handleBudgetChange = async () => {
@@ -108,10 +133,41 @@ export function DashboardPage() {
     }
   }
 
-  const isRevenue = (t: Transaction) => ['income', 'revenue'].includes(t.type.toLowerCase())
-  const isExpense = (t: Transaction) => ['expense', 'spending', 'spent'].includes(t.type.toLowerCase())
+  const handleCategoryBudgetChange = (category: string, amount: string) => {
+    setCategoryBudgets(prev => ({
+      ...prev,
+      [category]: parseFloat(amount) || 0
+    }))
+  }
 
-  const totalSpent = transactions
+  const saveCategoryBudgets = async () => {
+    try {
+      // Save each category budget
+      for (const [category, amount] of Object.entries(categoryBudgets)) {
+        if (amount && amount > 0) {
+          await upsertBudget({
+            user_id: 'f4e2af28-f270-4c19-90a8-81e85280b628',
+            category,
+            amount,
+            month: dateRange
+          })
+        }
+      }
+      setIsEditingCategoryBudgets(false)
+      // Refresh the budget data
+      const total = await getTotalBudget('f4e2af28-f270-4c19-90a8-81e85280b628', dateRange)
+      setMonthlyBudget(total)
+      setBudgetInput(total.toString())
+    } catch (err) {
+      console.error('Error saving category budgets:', err)
+      alert('Failed to save category budgets')
+    }
+  }
+
+  const isRevenue = (t: Transaction) => ['income', 'revenue'].includes(t.type.toLowerCase())
+  const isExpense = (t: Transaction) => ['expense', 'spending', 'expense'].includes(t.type.toLowerCase())
+
+  const totalExpense = transactions
     .filter(isExpense)
     .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
 
@@ -119,7 +175,7 @@ export function DashboardPage() {
     .filter(isRevenue)
     .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
 
-  const remaining = Math.max(0, monthlyBudget - totalSpent)
+  const remaining = Math.max(0, monthlyBudget - totalExpense)
   const txCount = transactions.length
 
   // Calculate category breakdown
@@ -131,9 +187,8 @@ export function DashboardPage() {
       return acc
     }, {} as Record<string, number>)
 
-  const topCategories = Object.entries(categoryBreakdown)
+  const allCategories = Object.entries(categoryBreakdown)
     .sort(([, a], [, b]) => b - a)
-    .slice(0, 5)
     .map(([category, amount]) => ({
       label: category,
       value: amount,
@@ -214,21 +269,17 @@ export function DashboardPage() {
             </select>
           ) : (
             <div className="dashboard__year-controls">
-              <button
-                className="dashboard__year-btn"
-                onClick={() => setSelectedYear(selectedYear - 1)}
-                aria-label="Previous year"
-              >
-                ◀
-              </button>
-              <span className="dashboard__year-display">{selectedYear}</span>
-              <button
-                className="dashboard__year-btn"
-                onClick={() => setSelectedYear(selectedYear + 1)}
-                aria-label="Next year"
-              >
-                ▶
-              </button>
+              <label htmlFor="dashboard-year" className="dashboard__year-label">Year</label>
+              <input
+                id="dashboard-year"
+                type="number"
+                className="dashboard__year-spinbutton"
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                min={yearsRange[yearsRange.length - 1]} // Oldest year (last in reversed array)
+                max={yearsRange[0]} // Newest year (first in reversed array)
+                step="1"
+              />
             </div>
           )}
         </div>
@@ -236,10 +287,10 @@ export function DashboardPage() {
 
       <div className="dashboard__stats">
         <StatCard
-          label="Total Spent"
-          value={formatCurrency(totalSpent)}
+          label="Total Expense"
+          value={formatCurrency(totalExpense)}
           sub={displayLabel}
-          accent={totalSpent > monthlyBudget}
+          accent={totalExpense > monthlyBudget}
           icon="💸"
         />
         <StatCard
@@ -250,10 +301,10 @@ export function DashboardPage() {
         />
         <StatCard
           label="Net Balance"
-          value={formatCurrency(totalRevenue - totalSpent)}
+          value={formatCurrency(totalRevenue - totalExpense)}
           sub={displayLabel}
-          accent={(totalRevenue - totalSpent) < 0}
-          icon={(totalRevenue - totalSpent) >= 0 ? "📈" : "📉"}
+          accent={(totalRevenue - totalExpense) < 0}
+          icon={(totalRevenue - totalExpense) >= 0 ? "📈" : "📉"}
         />
         <StatCard
           label="Transactions"
@@ -280,9 +331,13 @@ export function DashboardPage() {
                       <div className="budget-edit-field">
                         <span className="budget-currency">₱</span>
                         <input
-                          type="number"
-                          value={budgetInput}
-                          onChange={(e) => setBudgetInput(e.target.value)}
+                          type="text"
+                          value={budgetInput ? formatNumberWithSeparators(parseFloat(budgetInput)) : ''}
+                          onChange={(e) => {
+                            // Remove non-numeric characters except decimal point
+                            const value = e.target.value.replace(/[^0-9.]/g, '')
+                            setBudgetInput(value)
+                          }}
                           className="budget-edit-input-field"
                           min="0"
                           step="100"
@@ -330,8 +385,8 @@ export function DashboardPage() {
                 <span className="budget-value__amount">{formatCurrency(monthlyBudget)}</span>
               </div>
               <div className="budget-value budget-value--spent">
-                <span className="budget-value__label">Amount Spent</span>
-                <span className="budget-value__amount">{formatCurrency(totalSpent)}</span>
+                <span className="budget-value__label">Amount Expense</span>
+                <span className="budget-value__amount">{formatCurrency(totalExpense)}</span>
               </div>
               <div className="budget-value budget-value--remaining">
                 <span className="budget-value__label">Remaining</span>
@@ -344,26 +399,94 @@ export function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* Category Budget Management */}
+          <div className="budget-categories">
+            <div className="budget-categories__header">
+              <h4 className="budget-categories__title">Category Budgets</h4>
+              <div className="budget-categories__actions">
+                {isEditingCategoryBudgets ? (
+                  <>
+                    <button
+                      className="budget-btn budget-btn--primary"
+                      onClick={saveCategoryBudgets}
+                    >
+                      Save Category Budgets
+                    </button>
+                    <button
+                      className="budget-btn budget-btn--secondary"
+                      onClick={() => setIsEditingCategoryBudgets(false)}
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    className="budget-edit-trigger"
+                    onClick={() => setIsEditingCategoryBudgets(true)}
+                    title="Edit category budgets"
+                  >
+                    <span className="budget-edit-icon">📋</span>
+                    <span className="budget-edit-text">Edit Categories</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="budget-categories__list">
+              {Object.entries(categoryBreakdown).map(([category, spentAmount]) => (
+                <div key={category} className="budget-category-item">
+                  <div className="budget-category-info">
+                    <span className="budget-category-name">{category}</span>
+                    <span className="budget-category-spent">
+                      Spent: {formatCurrency(spentAmount)}
+                    </span>
+                  </div>
+                  <div className="budget-category-input">
+                    <label className="budget-category-label">Budget</label>
+                    <div className="budget-category-field">
+                      <span className="budget-currency">₱</span>
+                      <input
+                        type="text"
+                        value={categoryBudgets[category] ? formatNumberWithSeparators(categoryBudgets[category]) : ''}
+                        onChange={(e) => {
+                          // Remove non-numeric characters except decimal point
+                          const value = e.target.value.replace(/[^0-9.]/g, '')
+                          handleCategoryBudgetChange(category, value)
+                        }}
+                        className="budget-category-input-field"
+                        min="0"
+                        step="100"
+                        placeholder="0"
+                        disabled={!isEditingCategoryBudgets}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="budget-progress">
             <div className="budget-progress__bar">
               <div
                 className="budget-progress__fill"
                 style={{
-                  width: `${Math.min((totalSpent / monthlyBudget) * 100, 100)}%`,
-                  backgroundColor: totalSpent > monthlyBudget ? 'var(--danger)' : 'var(--primary)'
+                  width: `${Math.min((totalExpense / monthlyBudget) * 100, 100)}%`,
+                  backgroundColor: totalExpense > monthlyBudget ? 'var(--danger)' : 'var(--primary)'
                 }}
               ></div>
             </div>
             <div className="budget-progress__labels">
               <span>Budget</span>
-              <span>{Math.min(Math.round((totalSpent / monthlyBudget) * 100), 100)}%</span>
+              <span>{Math.min(Math.round((totalExpense / monthlyBudget) * 100), 100)}%</span>
             </div>
           </div>
         </Card>
 
         <TrendCard
-          title={timeframe === 'monthly' ? "Top Expense Categories" : "Top Categories This Year"}
-          data={topCategories}
+          title={timeframe === 'monthly' ? "All Expense Categories" : "All Categories This Year"}
+          data={allCategories}
         />
 
         <Card className="dashboard__summary-card">
@@ -372,13 +495,13 @@ export function DashboardPage() {
             <div className="summary-metric">
               <span className="summary-metric__label">Savings Rate</span>
               <span className="summary-metric__value">
-                {totalRevenue > 0 ? Math.round(((totalRevenue - totalSpent) / totalRevenue) * 100).toString() : '0'}%
+                {totalRevenue > 0 ? Math.round(((totalRevenue - totalExpense) / totalRevenue) * 100).toString() : '0'}%
               </span>
             </div>
             <div className="summary-metric">
               <span className="summary-metric__label">Average Transaction</span>
               <span className="summary-metric__value">
-                {txCount > 0 ? formatCurrency((totalRevenue + totalSpent) / txCount) : formatCurrency(0)}
+                {txCount > 0 ? formatCurrency((totalRevenue + totalExpense) / txCount) : formatCurrency(0)}
               </span>
             </div>
             <div className="summary-metric">

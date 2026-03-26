@@ -9,7 +9,7 @@ interface Transaction {
 
 interface Budget {
   category: string
-  amount: string
+  amount: number
 }
 
 interface VarianceReportProps {

@@ -24,6 +24,29 @@ export function getCurrentMonth(): string {
 }
 
 /**
+ * Convert month format from YYYY-MM to MMM format
+ * @param month - 'YYYY-MM' format
+ * @returns 'MMM' format (e.g., 'Jan', 'Feb', etc.)
+ */
+export function convertToDatabaseMonth(month: string): string {
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const monthIndex = parseInt(month.split('-')[1]) - 1
+  return monthNames[monthIndex]
+}
+
+/**
+ * Convert month format from MMM to YYYY-MM format
+ * @param month - 'MMM' format (e.g., 'Jan', 'Feb', etc.)
+ * @returns 'YYYY-MM' format
+ */
+export function convertFromDatabaseMonth(month: string, year: number = new Date().getFullYear()): string {
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  const monthIndex = monthNames.indexOf(month)
+  if (monthIndex === -1) return getCurrentMonth()
+  return `${year}-${String(monthIndex + 1).padStart(2, '0')}`
+}
+
+/**
  * Gets an array of months for the current year in YYYY-MM format.
  * @returns {string[]}
  */
@@ -35,6 +58,24 @@ export function getYearRange(): string[] {
     months.push(`${currentYear}-${month}`)
   }
   return months
+}
+
+/**
+ * Gets an array of years for the year selector.
+ * @param {number} [startYear] - Starting year, defaults to 5 years ago
+ * @param {number} [endYear] - Ending year, defaults to current year
+ * @returns {number[]}
+ */
+export function getYearsRange(startYear?: number, endYear?: number): number[] {
+  const currentYear = new Date().getFullYear()
+  const start = startYear ?? currentYear - 5
+  const end = endYear ?? currentYear
+
+  const years = []
+  for (let year = start; year <= end; year++) {
+    years.push(year)
+  }
+  return years.reverse() // Show newest years first
 }
 
 /**

@@ -86,6 +86,25 @@
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
+.dashboard__year-selector {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 120px;
+  font-size: 0.875rem;
+}
+
+.dashboard__year-selector:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Year Spin Button Styles */
 .dashboard__year-controls {
   display: flex;
   align-items: center;
@@ -96,32 +115,50 @@
   padding: var(--space-2) var(--space-4);
 }
 
-.dashboard__year-btn {
-  background: transparent;
-  border: none;
+.dashboard__year-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.dashboard__year-spinbutton {
+  width: 100px;
+  padding: var(--space-2) var(--space-3);
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-md);
+  background: var(--surface);
   color: var(--text-primary);
-  cursor: pointer;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  transition: all 0.2s ease;
-}
-
-.dashboard__year-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: scale(1.1);
-}
-
-.dashboard__year-display {
   font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--text-primary);
-  min-width: 60px;
+  font-size: 1rem;
   text-align: center;
+  outline: none;
+  transition: all 0.2s ease;
+  appearance: textfield;
+  -webkit-appearance: textfield;
+}
+
+.dashboard__year-spinbutton::-webkit-outer-spin-button,
+.dashboard__year-spinbutton::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.dashboard__year-spinbutton[type=number] {
+  -moz-appearance: textfield;
+}
+
+.dashboard__year-spinbutton:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+  transform: translateY(-1px);
+}
+
+.dashboard__year-spinbutton:hover {
+  border-color: var(--primary-hover);
+  background: rgba(255, 255, 255, 0.1);
 }
 
 /* Responsive design for controls */
@@ -795,6 +832,137 @@
   text-align: center;
 }
 
+/* Category Budget Management Styles */
+.budget-categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.budget-categories__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.budget-categories__title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.budget-categories__actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.budget-categories__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.budget-category-item {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  align-items: center;
+  transition: transform 0.2s ease;
+}
+
+.budget-category-item:hover {
+  transform: translateX(4px);
+}
+
+.budget-category-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.budget-category-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.budget-category-spent {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.budget-category-input {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.budget-category-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.budget-category-field {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  transition: border-color 0.2s ease;
+}
+
+.budget-category-field:focus-within {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.budget-category-input-field {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  padding: var(--space-1);
+  outline: none;
+  min-width: 0;
+}
+
+.budget-category-input-field:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.6;
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.budget-category-input-field:not(:disabled) {
+  background-color: transparent;
+  border: 2px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-1);
+}
+
+.budget-category-input-field:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
   .dashboard__grid {
@@ -807,6 +975,15 @@
 
   .summary-metrics {
     grid-template-columns: 1fr;
+  }
+
+  .budget-categories {
+    padding: var(--space-3);
+  }
+
+  .budget-category-item {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
   }
 
   .dashboard__title {
