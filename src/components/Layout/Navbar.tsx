@@ -12,6 +12,7 @@ const PAGE_TITLES: PageTitles = {
   '/': 'Dashboard',
   '/expenses': 'Expenses',
   '/audit': 'Audit Reports',
+  '/reports': 'Reports',
 }
 
 export function Navbar() {

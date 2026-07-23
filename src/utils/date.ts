@@ -85,7 +85,6 @@ export function getYearsRange(startYear?: number, endYear?: number): number[] {
  */
 export function getMonthRange(month: string): { start: string; end: string } {
   const [year, mon] = month.split('-').map(Number)
-  console.log('getMonthRange input:', { month, year, mon })
 
   const start = new Date(year, mon - 1, 1)
   const end = new Date(year, mon, 0)
@@ -95,28 +94,8 @@ export function getMonthRange(month: string): { start: string; end: string } {
   const startLocal = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`
   const endLocal = `${end.getFullYear()}-${pad(end.getMonth() + 1)}-${pad(end.getDate())}`
 
-  const result = {
+  return {
     start: startLocal,
     end: endLocal,
   }
-
-  console.log('getMonthRange output:', result)
-
-  // Log the actual dates for debugging
-  const startStr = start.toString()
-  const endStr = end.toString()
-  const startISO = start.toISOString()
-  const endISO = end.toISOString()
-  const startFormatted = start.toISOString().split('T')[0]
-  const endFormatted = end.toISOString().split('T')[0]
-
-  console.log('Date objects:')
-  console.log('  start:', startStr)
-  console.log('  end:', endStr)
-  console.log('  startISO:', startISO)
-  console.log('  endISO:', endISO)
-  console.log('  startFormatted:', startFormatted)
-  console.log('  endFormatted:', endFormatted)
-
-  return result
 }

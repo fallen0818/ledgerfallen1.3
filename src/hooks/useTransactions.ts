@@ -9,7 +9,7 @@ import { getCurrentMonth } from '../utils/date'
 
 interface Transaction {
   id: string
-  amount: string
+  amount: number | string
   description: string
   transaction_date: string
   type_id: string
@@ -22,7 +22,7 @@ interface Transaction {
 }
 
 interface TransactionData {
-  amount: string
+  amount: number | string
   description: string
   transaction_date: string
   type_id: string

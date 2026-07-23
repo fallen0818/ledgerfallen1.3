@@ -23,7 +23,6 @@ interface Transaction {
 export function ExpensesPage() {
   const { selectedMonth, selectedYear } = useSidebarFilters()
   const month = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
-  console.log('ExpensesPage - selected month/year:', { selectedMonth, selectedYear, month })
 
   const { transactions, loading, addTransaction, editTransaction, removeTransaction } = useTransactions(month)
   const [showForm, setShowForm] = useState(false)

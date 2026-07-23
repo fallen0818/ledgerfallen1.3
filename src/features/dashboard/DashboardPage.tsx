@@ -1,15 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useTransactions } from '../../hooks/useTransactions'
+import { useAuth } from '../../hooks/useAuth'
 import { Card } from '../../components/Shared/Card'
 import { StatCardSkeleton } from '../../components/Shared/Skeleton'
 import { formatCurrency, formatNumberWithSeparators } from '../../utils/currency'
 import { getCurrentMonth, getYearRange, getYearsRange } from '../../utils/date'
 import { getTotalBudget, getBudgetCategories, upsertBudget } from '../../services/budgetService'
+import { getTransactions } from '../../services/transactionService'
 import './DashboardPage.css'
 
 interface Transaction {
   id: string
-  amount: string
+  amount: number | string
   description: string
   transaction_date: string
   type_id: string
@@ -57,6 +59,7 @@ function TrendCard({ title, data }: { title: string; data: { label: string; valu
 const DEFAULT_BUDGET = 2000
 
 export function DashboardPage() {
+  const { user } = useAuth()
   const [timeframe, setTimeframe] = useState<'monthly' | 'yearly'>('monthly')
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
@@ -74,13 +77,15 @@ export function DashboardPage() {
   const [budgetInput, setBudgetInput] = useState(DEFAULT_BUDGET.toString())
   const [isEditingCategoryBudgets, setIsEditingCategoryBudgets] = useState(false)
   const [categoryBudgets, setCategoryBudgets] = useState<Record<string, number>>({})
+  const [previousPeriodBreakdown, setPreviousPeriodBreakdown] = useState<Record<string, number>>({})
 
   // Fetch budget and categories from services
   useEffect(() => {
+    if (!user?.id) return
     async function fetchData() {
       try {
         // Fetch total budget
-        const total = await getTotalBudget('f4e2af28-f270-4c19-90a8-81e85280b628', dateRange)
+        const total = await getTotalBudget(user!.id, dateRange)
 
         if (total > 0) {
           setMonthlyBudget(total)
@@ -97,13 +102,14 @@ export function DashboardPage() {
       }
     }
     fetchData()
-  }, [dateRange])
+  }, [dateRange, user?.id])
 
   // Initialize category budgets with existing data
   useEffect(() => {
+    if (!user?.id) return
     async function loadCategoryBudgets() {
       try {
-        const budgets = await getBudgetCategories('f4e2af28-f270-4c19-90a8-81e85280b628', dateRange)
+        const budgets = await getBudgetCategories(user!.id, dateRange)
         const budgetMap: Record<string, number> = {}
         budgets.forEach(budget => {
           budgetMap[budget.category] = parseFloat(budget.amount)
@@ -114,7 +120,37 @@ export function DashboardPage() {
       }
     }
     loadCategoryBudgets()
-  }, [dateRange])
+  }, [dateRange, user?.id])
+
+  // Fetch previous period data for real trend comparison
+  useEffect(() => {
+    async function loadPreviousPeriod() {
+      try {
+        let prevRange: string
+        if (timeframe === 'monthly') {
+          const [y, m] = selectedMonth.split('-').map(Number)
+          const prevMonth = m === 1 ? 12 : m - 1
+          const prevYear = m === 1 ? y - 1 : y
+          prevRange = `${prevYear}-${String(prevMonth).padStart(2, '0')}`
+        } else {
+          prevRange = (selectedYear - 1).toString()
+        }
+        const prevTransactions = await getTransactions(prevRange)
+        const breakdown: Record<string, number> = {}
+        prevTransactions
+          .filter((t: any) => ['expense', 'spending'].includes((t.type || '').toLowerCase()))
+          .forEach((tx: any) => {
+            const category = tx.category_name || 'Uncategorized'
+            breakdown[category] = (breakdown[category] || 0) + Number(tx.amount)
+          })
+        setPreviousPeriodBreakdown(breakdown)
+      } catch (err) {
+        // Silently fail — previous period data is supplementary
+        setPreviousPeriodBreakdown({})
+      }
+    }
+    loadPreviousPeriod()
+  }, [timeframe, selectedMonth, selectedYear])
 
   const handleBudgetChange = async () => {
     const newBudget = parseFloat(budgetInput)
@@ -124,6 +160,15 @@ export function DashboardPage() {
     }
 
     try {
+      // Persist to Supabase
+      if (user?.id) {
+        await upsertBudget({
+          user_id: user.id,
+          category: 'Total',
+          amount: newBudget,
+          month: dateRange
+        })
+      }
       // Update local state
       setMonthlyBudget(newBudget)
       setIsEditingBudget(false)
@@ -141,12 +186,13 @@ export function DashboardPage() {
   }
 
   const saveCategoryBudgets = async () => {
+    if (!user?.id) return
     try {
       // Save each category budget
       for (const [category, amount] of Object.entries(categoryBudgets)) {
         if (amount && amount > 0) {
           await upsertBudget({
-            user_id: 'f4e2af28-f270-4c19-90a8-81e85280b628',
+            user_id: user.id,
             category,
             amount,
             month: dateRange
@@ -155,7 +201,7 @@ export function DashboardPage() {
       }
       setIsEditingCategoryBudgets(false)
       // Refresh the budget data
-      const total = await getTotalBudget('f4e2af28-f270-4c19-90a8-81e85280b628', dateRange)
+      const total = await getTotalBudget(user.id, dateRange)
       setMonthlyBudget(total)
       setBudgetInput(total.toString())
     } catch (err) {
@@ -165,7 +211,7 @@ export function DashboardPage() {
   }
 
   const isRevenue = (t: Transaction) => ['income', 'revenue'].includes(t.type.toLowerCase())
-  const isExpense = (t: Transaction) => ['expense', 'spending', 'expense'].includes(t.type.toLowerCase())
+  const isExpense = (t: Transaction) => ['expense', 'spending'].includes(t.type.toLowerCase())
 
   const totalExpense = transactions
     .filter(isExpense)
@@ -189,11 +235,17 @@ export function DashboardPage() {
 
   const allCategories = Object.entries(categoryBreakdown)
     .sort(([, a], [, b]) => b - a)
-    .map(([category, amount]) => ({
-      label: category,
-      value: amount,
-      change: Math.floor(Math.random() * 20) - 10 // Mock change data
-    }))
+    .map(([category, amount]) => {
+      const prevAmount = previousPeriodBreakdown[category] || 0
+      const change = prevAmount > 0
+        ? Math.round(((amount - prevAmount) / prevAmount) * 100)
+        : (amount > 0 ? 100 : 0)
+      return {
+        label: category,
+        value: amount,
+        change
+      }
+    })
 
   // Format the display label
   const displayLabel = timeframe === 'monthly'

@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { ToastProvider } from './components/Shared/Toast'
 import { ErrorBoundary } from './components/Shared/ErrorBoundary'
 import './index.css'
-import App from './App.jsx'
+import App from './App.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

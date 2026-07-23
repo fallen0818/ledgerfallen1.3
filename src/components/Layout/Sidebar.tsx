@@ -26,14 +26,13 @@ export function Sidebar() {
     async function fetchTransactionData() {
       try {
         const month = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
-        console.log('Sidebar fetching for month:', month)
-        console.log('Selected month index:', selectedMonth, 'Selected year:', selectedYear)
 
         const transactions = await getTransactions(month)
         setTransactionCount(transactions.length)
 
         const total = transactions.reduce((sum, transaction) => {
-          return sum + (transaction.type === 'income' ? transaction.amount : -transaction.amount)
+          const amount = Number(transaction.amount)
+          return sum + (transaction.type === 'income' ? amount : -amount)
         }, 0)
         setTotalAmount(total)
       } catch (err) {
