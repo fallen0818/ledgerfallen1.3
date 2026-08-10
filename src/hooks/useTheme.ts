@@ -7,18 +7,15 @@ const THEME_KEY = 'fallen-ledger-theme'
  */
 export function useTheme() {
     const [theme, setThemeState] = useState(() => {
-        // Check localStorage first
+        // Respect a saved choice; otherwise the app always opens light,
+        // regardless of OS preference. Dark is opt-in via the toggle.
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem(THEME_KEY)
             if (saved === 'light' || saved === 'dark') {
                 return saved
             }
-            // Check system preference
-            if (window.matchMedia?.('(prefers-color-scheme: light)').matches) {
-                return 'light'
-            }
         }
-        return 'dark'
+        return 'light'
     })
 
     // Apply theme to document
@@ -26,20 +23,6 @@ export function useTheme() {
         document.documentElement.setAttribute('data-theme', theme)
         localStorage.setItem(THEME_KEY, theme)
     }, [theme])
-
-    // Listen for system preference changes
-    useEffect(() => {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
-        const handleChange = (e: MediaQueryListEvent) => {
-            const saved = localStorage.getItem(THEME_KEY)
-            // Only auto-switch if user hasn't set a preference
-            if (!saved) {
-                setThemeState(e.matches ? 'dark' : 'light')
-            }
-        }
-        mediaQuery.addEventListener('change', handleChange)
-        return () => mediaQuery.removeEventListener('change', handleChange)
-    }, [])
 
     const setTheme = useCallback((newTheme: 'light' | 'dark') => {
         setThemeState(newTheme)

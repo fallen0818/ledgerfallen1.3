@@ -132,6 +132,8 @@
 }
 
 .tx-list__amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 700;
   color: var(--text-primary);
   text-align: right;
@@ -153,31 +155,29 @@
 }
 
 .tx-list__type {
-  font-size: 0.75rem;
-  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 4px;
+  letter-spacing: 0.06em;
+  padding: 1px 8px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid currentColor;
+  background: color-mix(in srgb, currentColor 8%, transparent);
+  transform: rotate(-1.5deg);
+  width: fit-content;
 }
 
-.tx-list__type--income {
-  color: var(--success);
-  background: color-mix(in srgb, var(--success) 15%, transparent);
-}
-
-.tx-list__type--expense {
-  color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
-}
-
+.tx-list__type--income,
 .tx-list__type--revenue {
   color: var(--success);
-  background: color-mix(in srgb, var(--success) 15%, transparent);
 }
 
+.tx-list__type--expense,
 .tx-list__type--spending {
   color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
 }
 
 .tx-list__date {
@@ -216,8 +216,8 @@
 }
 
 .tx-list__next-btn {
-  background: var(--primary);
-  color: white;
+  background: var(--accent);
+  color: var(--on-accent);
   border: none;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius);
@@ -227,7 +227,7 @@
 }
 
 .tx-list__next-btn:hover {
-  background: var(--primary-hover);
+  background: var(--accent-hover);
 }
 
 .tx-list__count {
@@ -257,6 +257,8 @@
 }
 
 .tx-summary-card__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 1.25rem;
   font-weight: 700;
   word-wrap: break-word;

@@ -41,6 +41,11 @@
   box-sizing: border-box;
 }
 
+#tx-amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
 .tx-form__input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);

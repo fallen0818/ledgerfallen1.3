@@ -29,6 +29,8 @@
 .budget-progress__meta {
   display: flex;
   justify-content: space-between;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 0.75rem;
   color: var(--text-muted);
 }

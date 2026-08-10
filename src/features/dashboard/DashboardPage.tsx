@@ -525,7 +525,7 @@ export function DashboardPage() {
                 className="budget-progress__fill"
                 style={{
                   width: `${Math.min((totalExpense / monthlyBudget) * 100, 100)}%`,
-                  backgroundColor: totalExpense > monthlyBudget ? 'var(--danger)' : 'var(--primary)'
+                  backgroundColor: totalExpense > monthlyBudget ? 'var(--danger)' : 'var(--accent)'
                 }}
               ></div>
             </div>

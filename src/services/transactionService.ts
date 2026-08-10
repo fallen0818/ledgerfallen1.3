@@ -5,10 +5,13 @@ interface Transaction {
   id: string;
   amount: number | string;
   category_name: string;
+  category_id?: string | null;
   transaction_date: string;
   type: string;
+  type_id?: number | null;
   description: string;
   user_email: string;
+  user_id?: string;
 }
 
 interface FilterParams {
@@ -19,20 +22,13 @@ interface FilterParams {
   type?: string;
 }
 
-/**
- * Fetch all transactions for the current user in a given month or year.
- * @param {string} [dateRange] — 'YYYY-MM' for month or 'YYYY' for year, defaults to current month
- */
 export async function getTransactions(dateRange = getCurrentMonth()) {
   let start: string, end: string;
 
-  // Check if the dateRange is a year (YYYY format) or month (YYYY-MM format)
   if (dateRange.length === 4) {
-    // Year format: YYYY
     start = `${dateRange}-01-01`;
     end = `${dateRange}-12-31`;
   } else {
-    // Month format: YYYY-MM
     const { start: monthStart, end: monthEnd } = getMonthRange(dateRange);
     start = monthStart;
     end = monthEnd;
@@ -44,7 +40,6 @@ export async function getTransactions(dateRange = getCurrentMonth()) {
     .gte("transaction_date", start)
     .lte("transaction_date", end)
     .order("transaction_date", { ascending: false });
-  // .range(0, 999); // Remove any default limits by explicitly setting a large range
 
   if (error) throw error;
   return data;
@@ -76,9 +71,6 @@ export async function getFilteredTransactions(filters: FilterParams = {}) {
   return data;
 }
 
-/**
- * Fetch ALL transactions for the current user (no date filter).
- */
 export async function getAllTransactions() {
   const { data, error } = await supabase
     .from("transactions")
@@ -91,9 +83,19 @@ export async function getAllTransactions() {
 export async function createTransaction(
   transaction: Omit<Transaction, "id">,
 ): Promise<Transaction> {
+  // TEMPORARY DEBUG LOGGING — remove once the issue is found.
+  console.log('[DEBUG] Raw transaction object received by createTransaction:', JSON.stringify(transaction, null, 2))
+
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!user) throw new Error("Not signed in — cannot create a transaction without a user.");
+
+  const payload = { ...transaction, user_id: user.id };
+  console.log('[DEBUG] Full payload about to be sent to Supabase:', JSON.stringify(payload, null, 2))
+
   const { data, error } = await supabase
     .from("transactions")
-    .insert([transaction])
+    .insert([payload])
     .select()
     .single();
   if (error) throw error;

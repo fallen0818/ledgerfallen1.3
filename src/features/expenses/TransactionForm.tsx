@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Button } from '../../components/Shared/Button'
 import { useAuth } from '../../hooks/useAuth'
-import { getTypes } from '../../services/typeService'
-import { getCategories } from '../../services/categoryService'
+import { getTypesWithId } from '../../services/typeService'
+import { getCategoriesWithId } from '../../services/categoryService'
 import './TransactionForm.css'
 
 interface TransactionFormProps {
@@ -11,21 +11,28 @@ interface TransactionFormProps {
   initialData?: any
 }
 
+interface NamedOption {
+  id: string | number
+  name: string
+}
+
 export function TransactionForm({ onSubmit, onCancel, initialData }: TransactionFormProps) {
   const { user } = useAuth()
   const isEditing = !!initialData
   const today = new Date().toISOString().split('T')[0]
 
-  const [types, setTypes] = useState<string[]>([])
-  const [categories, setCategories] = useState<string[]>([])
+  const [types, setTypes] = useState<NamedOption[]>([])
+  const [categories, setCategories] = useState<NamedOption[]>([])
   const [dataLoading, setDataLoading] = useState(true)
   const [dataError, setDataError] = useState<string | null>(null)
 
   const [form, setForm] = useState({
     amount: initialData?.amount || '',
     category_name: initialData?.category_name || '',
+    category_id: initialData?.category_id || '',
     transaction_date: initialData?.transaction_date || today,
     type: initialData?.type || '',
+    type_id: initialData?.type_id || '',
     description: initialData?.description || '',
     user_email: initialData?.user_email || user?.email || '',
   })
@@ -35,7 +42,7 @@ export function TransactionForm({ onSubmit, onCancel, initialData }: Transaction
 
   // Load types and categories on mount
   useEffect(() => {
-    Promise.all([getTypes(), getCategories()])
+    Promise.all([getTypesWithId(), getCategoriesWithId()])
       .then(([fetchedTypes, fetchedCategories]) => {
         setTypes(fetchedTypes)
         setCategories(fetchedCategories)
@@ -44,8 +51,10 @@ export function TransactionForm({ onSubmit, onCancel, initialData }: Transaction
         if (!isEditing) {
           setForm(prev => ({
             ...prev,
-            type: fetchedTypes.length > 0 ? fetchedTypes[0] : '',
-            category_name: fetchedCategories.length > 0 ? fetchedCategories[0] : '',
+            type: fetchedTypes.length > 0 ? fetchedTypes[0].name : '',
+            type_id: fetchedTypes.length > 0 ? fetchedTypes[0].id : '',
+            category_name: fetchedCategories.length > 0 ? fetchedCategories[0].name : '',
+            category_id: fetchedCategories.length > 0 ? fetchedCategories[0].id : '',
           }))
         }
 
@@ -58,7 +67,20 @@ export function TransactionForm({ onSubmit, onCancel, initialData }: Transaction
       })
   }, [isEditing])
 
-  const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm((f) => ({ ...f, [key]: e.target.value }))
+  const set = (key: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
+    setForm((f) => ({ ...f, [key]: e.target.value }))
+
+  // Type/category selects need to update BOTH the id and the display name
+  // together, since the <option> value can only carry one string.
+  const setType = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const match = types.find(t => String(t.id) === e.target.value)
+    setForm(f => ({ ...f, type_id: e.target.value, type: match?.name || '' }))
+  }
+
+  const setCategory = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const match = categories.find(c => String(c.id) === e.target.value)
+    setForm(f => ({ ...f, category_id: e.target.value, category_name: match?.name || '' }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -106,8 +128,8 @@ export function TransactionForm({ onSubmit, onCancel, initialData }: Transaction
         <select
           id="tx-type"
           className="tx-form__input tx-form__select"
-          value={form.type}
-          onChange={set('type')}
+          value={form.type_id}
+          onChange={setType}
           disabled={dataLoading}
           required
         >
@@ -115,7 +137,7 @@ export function TransactionForm({ onSubmit, onCancel, initialData }: Transaction
             <option>Loading types...</option>
           ) : (
             types.map((t) => (
-              <option key={t} value={t}>{t}</option>
+              <option key={t.id} value={t.id}>{t.name}</option>
             ))
           )}
         </select>
@@ -126,8 +148,8 @@ export function TransactionForm({ onSubmit, onCancel, initialData }: Transaction
         <select
           id="tx-category"
           className="tx-form__input tx-form__select"
-          value={form.category_name}
-          onChange={set('category_name')}
+          value={form.category_id}
+          onChange={setCategory}
           disabled={dataLoading}
           required
         >
@@ -135,7 +157,7 @@ export function TransactionForm({ onSubmit, onCancel, initialData }: Transaction
             <option>Loading categories...</option>
           ) : (
             categories.map((c) => (
-              <option key={c} value={c}>{c}</option>
+              <option key={c.id} value={c.id}>{c.name}</option>
             ))
           )}
         </select>

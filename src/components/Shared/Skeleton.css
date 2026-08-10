@@ -10,18 +10,18 @@
 
 .skeleton {
     background: linear-gradient(90deg,
-            var(--color-skeleton-base, #313244) 25%,
-            var(--color-skeleton-highlight, #45475a) 50%,
-            var(--color-skeleton-base, #313244) 75%);
+            var(--skeleton-base) 25%,
+            var(--skeleton-highlight) 50%,
+            var(--skeleton-base) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
 }
 
 .card-skeleton {
     padding: 20px;
-    border-radius: 12px;
-    background: var(--color-surface, #1e1e2e);
-    border: 1px solid var(--color-border, #313244);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    border: 1px solid var(--border);
 }
 
 .card-skeleton__header {
@@ -42,7 +42,7 @@
     align-items: center;
     gap: 16px;
     padding: 16px;
-    border-bottom: 1px solid var(--color-border, #313244);
+    border-bottom: 1px solid var(--border);
 }
 
 .stat-card-skeleton {

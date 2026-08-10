@@ -19,24 +19,25 @@
 
 .error-boundary__title {
     margin: 0 0 12px;
+    font-family: var(--font-display);
     font-size: 22px;
-    font-weight: 600;
-    color: var(--color-text, #cdd6f4);
+    font-weight: 700;
+    color: var(--text-primary);
 }
 
 .error-boundary__message {
     margin: 0 0 24px;
-    color: var(--color-text-muted, #6c7086);
+    color: var(--text-muted);
     font-size: 14px;
     line-height: 1.5;
 }
 
 .error-boundary__retry {
-    background: var(--color-primary, #89b4fa);
-    color: var(--color-bg, #1e1e2e);
+    background: var(--accent);
+    color: var(--on-accent);
     border: none;
     padding: 12px 28px;
-    border-radius: 8px;
+    border-radius: var(--radius-md);
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
@@ -44,6 +45,6 @@
 }
 
 .error-boundary__retry:hover {
-    opacity: 0.9;
+    background: var(--accent-hover);
     transform: translateY(-1px);
 }

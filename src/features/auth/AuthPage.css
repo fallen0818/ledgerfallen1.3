@@ -15,7 +15,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   padding: var(--space-8);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 24px 64px rgba(20, 39, 32, 0.14);
 }
 
 .auth-card__brand {
@@ -30,11 +30,11 @@
 }
 
 .auth-card__title {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 700;
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: -0.03em;
 }
 
 .auth-card__subtitle {

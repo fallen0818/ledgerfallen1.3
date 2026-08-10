@@ -25,6 +25,8 @@
 }
 
 .re-card__value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-size: 1.25rem;
   font-weight: 700;
   word-wrap: break-word;
@@ -54,7 +56,9 @@
 }
 
 .re-report__title {
-  font-size: 1.125rem;
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
   margin-bottom: var(--space-6);
   color: var(--text-primary);
 }
@@ -85,6 +89,8 @@
 }
 
 .re-amount {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
   text-align: right;
   word-wrap: break-word;
@@ -126,8 +132,8 @@
 }
 
 .re-report__next-btn {
-  background: var(--primary);
-  color: white;
+  background: var(--accent);
+  color: var(--on-accent);
   border: none;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius);
@@ -137,7 +143,7 @@
 }
 
 .re-report__next-btn:hover {
-  background: var(--primary-hover);
+  background: var(--accent-hover);
 }
 
 .re-report__count {

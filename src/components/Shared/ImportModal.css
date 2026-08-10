@@ -138,6 +138,8 @@
 
 .import-modal__stat-value {
     display: block;
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     font-size: 24px;
     font-weight: 700;
     color: var(--text-primary);
@@ -197,27 +199,34 @@
 }
 
 .type-badge {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    padding: 1px 8px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid currentColor;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    font-family: var(--font-mono);
     font-size: 11px;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
+    transform: rotate(-1.5deg);
+    width: fit-content;
 }
 
 .type-badge--income,
 .type-badge--revenue {
-    background: color-mix(in srgb, var(--success) 15%, transparent);
     color: var(--success);
 }
 
 .type-badge--expense,
 .type-badge--spending {
-    background: color-mix(in srgb, var(--danger) 15%, transparent);
     color: var(--danger);
 }
 
 .amount-cell {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
     font-weight: 600;
     text-align: right;
 }

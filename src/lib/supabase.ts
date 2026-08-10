@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Provide minimal ImportMeta typing for Vite env vars when using TypeScript
 declare global {
   interface ImportMetaEnv {
     readonly VITE_SUPABASE_URL?: string
@@ -15,13 +14,20 @@ declare global {
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
+// TEMPORARY DEBUG LOGGING — remove once the issue is found.
+// This does NOT print the actual key, just whether it exists and its length.
+console.log('[DEBUG] Supabase URL loaded:', supabaseUrl)
+console.log('[DEBUG] Supabase anon key present:', !!supabaseAnonKey)
+console.log('[DEBUG] Supabase anon key length:', supabaseAnonKey?.length)
+console.log('[DEBUG] Supabase anon key first 10 chars:', supabaseAnonKey?.slice(0, 10))
+console.log('[DEBUG] Supabase anon key last 10 chars:', supabaseAnonKey?.slice(-10))
+
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error(
     '[Supabase] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY environment variables.'
   )
 }
 
-// Fallback to empty string to avoid immediate crash, or throw a clean error
 export const supabase = createClient(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder-key'

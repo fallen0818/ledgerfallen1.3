@@ -21,11 +21,11 @@
 /* Primary */
 .btn--primary {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .btn--primary:hover {
   background: var(--accent-hover);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 40%, transparent);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 /* Ghost */
@@ -41,11 +41,11 @@
 
 /* Danger */
 .btn--danger {
-  background: color-mix(in srgb, var(--danger) 15%, transparent);
+  background: var(--danger-bg);
   color: var(--danger);
   border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
 }
 .btn--danger:hover {
   background: var(--danger);
-  color: #fff;
+  color: #ffffff;
 }
