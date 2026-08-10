@@ -56,16 +56,22 @@ export function ExpensesPage() {
   const handleImport = async (importedTransactions: any[]) => {
     let successCount = 0
     let errorCount = 0
+    let firstError: string | null = null
 
     for (const tx of importedTransactions) {
       try {
+        // rowIndex/errors are ImportModal's own preview-table bookkeeping,
+        // not real transaction columns — never send them to the database.
+        const { rowIndex, errors: _rowErrors, ...cleanTx } = tx
         await addTransaction({
-          ...tx,
+          ...cleanTx,
           user_email: user?.email
         })
         successCount++
       } catch (err: unknown) {
         errorCount++
+        const message = (err as Error).message
+        if (!firstError) firstError = message
         console.error('Failed to import transaction:', err)
       }
     }
@@ -76,7 +82,9 @@ export function ExpensesPage() {
       toast.success(`Successfully imported ${successCount} transactions!`)
     }
 
-    setShowImport(false)
+    // Let ImportModal know what actually happened, instead of it assuming
+    // success just because this function didn't throw.
+    return { successCount, errorCount, firstError }
   }
 
   const handleExport = () => {

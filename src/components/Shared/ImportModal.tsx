@@ -37,7 +37,7 @@ interface ImportResult {
 interface ImportModalProps {
     isOpen: boolean
     onClose: () => void
-    onImport: (transactions: ImportTransaction[]) => Promise<void>
+    onImport: (transactions: ImportTransaction[]) => Promise<{ successCount: number; errorCount: number; firstError: string | null } | void>
 }
 
 export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
@@ -198,9 +198,21 @@ export function ImportModal({ isOpen, onClose, onImport }: ImportModalProps) {
         setLoading(true)
 
         try {
-            await onImport(selectedTransactions)
-            setStep('complete')
-            toast.success(`Successfully imported ${selectedTransactions.length} transactions!`)
+            const result = await onImport(selectedTransactions)
+
+            // onImport may not return a result (older callers) — treat that
+            // as success for backward compatibility, but if it DOES tell us
+            // what really happened, believe that instead of assuming success.
+            if (result && result.errorCount > 0) {
+                setError(
+                    result.successCount > 0
+                        ? `${result.successCount} of ${selectedTransactions.length} imported. ${result.errorCount} failed — first error: ${result.firstError}`
+                        : `Import failed for all ${result.errorCount} transactions — first error: ${result.firstError}`
+                )
+                setStep('preview')
+            } else {
+                setStep('complete')
+            }
         } catch (err) {
             setError('Failed to import transactions: ' + (err as Error).message)
             setStep('preview')
