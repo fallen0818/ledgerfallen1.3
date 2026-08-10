@@ -195,7 +195,7 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }: {
                   variant="ghost"
                   onClick={() => onEdit(tx)}
                   aria-label={`Edit ${tx.description}`}
-                  className="tx-list__action-btn"
+                  className="tx-list__action-btn tx-list__action-btn--edit"
                 >
                   <EditIcon />
                 </Button>
@@ -203,7 +203,7 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }: {
                   variant="danger"
                   onClick={() => handleDeleteClick(tx)}
                   aria-label={`Delete ${tx.description}`}
-                  className="tx-list__action-btn"
+                  className="tx-list__action-btn tx-list__action-btn--delete"
                 >
                   <TrashIcon />
                 </Button>

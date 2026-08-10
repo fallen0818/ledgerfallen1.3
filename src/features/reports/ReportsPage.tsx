@@ -17,7 +17,7 @@ interface Transaction {
 }
 
 interface FilterState {
-  id: string
+  description: string
   startDate: string
   endDate: string
   type: string
@@ -30,7 +30,7 @@ export function ReportsPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [filters, setFilters] = useState<FilterState>({
-    id: '',
+    description: '',
     startDate: '',
     endDate: '',
     type: 'All',

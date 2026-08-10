@@ -145,13 +145,51 @@
   justify-content: flex-end;
 }
 
-.tx-list__action-btn {
-  padding: 0.4rem !important;
-  height: 32px !important;
-  width: 32px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+/* Circular icon buttons for row actions — specific selector (not !important)
+   cleanly overrides the base .btn padding since .btn.tx-list__action-btn
+   is naturally more specific than .btn alone. */
+.btn.tx-list__action-btn {
+  padding: 0;
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.btn.tx-list__action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn.tx-list__action-btn:active {
+  transform: scale(0.94);
+}
+
+/* Edit: neutral by default, accent-tinted on hover */
+.tx-list__action-btn--edit:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Delete: neutral by default, danger-tinted only on hover — not a solid
+   red button sitting in every row at rest. */
+.tx-list__action-btn--delete:hover {
+  background: var(--danger-bg);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.tx-list__action-btn svg {
+  width: 15px;
+  height: 15px;
+  display: block;
 }
 
 .tx-list__type {
