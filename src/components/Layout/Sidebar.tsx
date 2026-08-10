@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { to: '/expenses', label: 'Expenses', icon: '💸' },
   { to: '/audit', label: 'Audit', icon: '📋' },
   { to: '/reports', label: 'Reports', icon: '📈' },
+  { to: '/categories', label: 'Categories', icon: '🏷️' },
 ]
 
 const MONTHS = [

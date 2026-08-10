@@ -13,6 +13,7 @@ import { DashboardPage } from './features/dashboard/DashboardPage'
 import { ExpensesPage } from './features/expenses/ExpensesPage'
 import { AuditPage } from './features/audit/AuditPage'
 import { ReportsPage } from './features/reports/ReportsPage'
+import { ManageCategoriesPage } from './features/settings/ManageCategoriesPage'
 
 // Auth guard
 import { useAuth } from './hooks/useAuth'
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="expenses" element={<ExpensesPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="reports" element={<ReportsPage />} />
+        <Route path="categories" element={<ManageCategoriesPage />} />
       </Route>
 
       {/* Fallback */}
