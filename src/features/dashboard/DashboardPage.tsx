@@ -24,14 +24,14 @@ interface Transaction {
   user_email: string
 }
 
-function StatCard({ label, value, sub, accent, icon }: { label: string; value: string | number; sub?: string; accent?: boolean; icon?: string }) {
+function StatCard({ label, value, sub, accent, positive, icon }: { label: string; value: string | number; sub?: string; accent?: boolean; positive?: boolean; icon?: string }) {
   return (
     <Card className={`stat-card ${accent ? 'stat-card--accent' : ''}`}>
       <div className="stat-card__header">
         {icon && <span className="stat-card__icon">{icon}</span>}
         <p className="stat-card__label">{label}</p>
       </div>
-      <p className="stat-card__value">{value}</p>
+      <p className={`stat-card__value ${positive ? 'stat-card__value--positive' : ''}`}>{value}</p>
       {sub && <p className="stat-card__sub">{sub}</p>}
     </Card>
   )
@@ -404,6 +404,7 @@ export function DashboardPage() {
           label="Total Revenue"
           value={formatCurrency(totalRevenue)}
           sub={displayLabel}
+          positive
           icon="💰"
         />
         <StatCard

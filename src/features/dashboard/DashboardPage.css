@@ -252,6 +252,10 @@
   color: var(--danger);
 }
 
+.stat-card__value--positive {
+  color: var(--success);
+}
+
 .dashboard__grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
