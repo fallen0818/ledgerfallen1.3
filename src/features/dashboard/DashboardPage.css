@@ -405,6 +405,13 @@
   padding: var(--space-2);
   outline: none;
   min-width: 0;
+  -moz-appearance: textfield;
+}
+
+.budget-edit-input-field::-webkit-outer-spin-button,
+.budget-edit-input-field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .budget-edit-input-field::placeholder {
@@ -936,6 +943,13 @@
   padding: var(--space-1);
   outline: none;
   min-width: 0;
+  -moz-appearance: textfield;
+}
+
+.budget-category-input-field::-webkit-outer-spin-button,
+.budget-category-input-field::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 
 .budget-category-input-field:disabled {

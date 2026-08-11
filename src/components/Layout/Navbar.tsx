@@ -10,7 +10,7 @@ interface PageTitles {
 
 const PAGE_TITLES: PageTitles = {
   '/': 'Dashboard',
-  '/expenses': 'Expenses',
+  '/expenses': 'Transactions',
   '/audit': 'Audit Reports',
   '/reports': 'Reports',
 }

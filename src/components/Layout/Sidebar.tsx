@@ -7,7 +7,7 @@ import './Sidebar.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: '📊' },
-  { to: '/expenses', label: 'Expenses', icon: '💸' },
+  { to: '/expenses', label: 'Transactions', icon: '💸' },
   { to: '/audit', label: 'Audit', icon: '📋' },
   { to: '/reports', label: 'Reports', icon: '📈' },
   { to: '/categories', label: 'Categories', icon: '🏷️' },

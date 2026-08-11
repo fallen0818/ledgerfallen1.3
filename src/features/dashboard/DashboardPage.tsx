@@ -3,10 +3,11 @@ import { useTransactions } from '../../hooks/useTransactions'
 import { useAuth } from '../../hooks/useAuth'
 import { Card } from '../../components/Shared/Card'
 import { StatCardSkeleton } from '../../components/Shared/Skeleton'
-import { formatCurrency, formatNumberWithSeparators } from '../../utils/currency'
+import { formatCurrency } from '../../utils/currency'
 import { getCurrentMonth, getYearRange, getYearsRange } from '../../utils/date'
 import { getTotalBudget, getTotalBudgetByYear, getBudgetCategories, upsertBudget } from '../../services/budgetService'
 import { getTransactions } from '../../services/transactionService'
+import { TrendChart } from './TrendChart'
 import './DashboardPage.css'
 
 interface Transaction {
@@ -78,6 +79,46 @@ export function DashboardPage() {
   const [isEditingCategoryBudgets, setIsEditingCategoryBudgets] = useState(false)
   const [categoryBudgets, setCategoryBudgets] = useState<Record<string, number>>({})
   const [previousPeriodBreakdown, setPreviousPeriodBreakdown] = useState<Record<string, number>>({})
+  const [monthlyTrend, setMonthlyTrend] = useState<{ monthLabel: string; expense: number; revenue: number }[]>([])
+
+  const isRevenue = (t: Transaction) => ['income', 'revenue', 'earning', 'earnings'].includes((t.type || '').toLowerCase())
+  const isExpense = (t: Transaction) => ['expense', 'spending', 'cost', 'costs'].includes((t.type || '').toLowerCase())
+  const isOther = (t: Transaction) => !isRevenue(t) && !isExpense(t)
+
+  // Fetch the last 6 months of Expense/Revenue totals for the trend chart.
+  // Independent of the Monthly/Yearly toggle above — always shows a rolling
+  // 6-month view regardless of what period is currently selected.
+  useEffect(() => {
+    if (!user?.id) return
+    async function loadTrend() {
+      try {
+        const now = new Date()
+        const months: string[] = []
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+          months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`)
+        }
+
+        const results = await Promise.all(months.map((m) => getTransactions(m)))
+
+        const trend = months.map((m, idx) => {
+          const [y, mo] = m.split('-').map(Number)
+          const monthLabel = new Date(y, mo - 1, 1).toLocaleString('en-US', { month: 'short' })
+          const txs = results[idx] as unknown as Transaction[]
+          const expense = txs.filter(isExpense).reduce((sum, t) => sum + Number(t.amount), 0)
+          const revenue = txs.filter(isRevenue).reduce((sum, t) => sum + Number(t.amount), 0)
+          return { monthLabel, expense, revenue }
+        })
+
+        setMonthlyTrend(trend)
+      } catch (err) {
+        console.error('Error loading monthly trend:', err)
+        setMonthlyTrend([])
+      }
+    }
+    loadTrend()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
   // Fetch budget and categories from services
   useEffect(() => {
@@ -220,9 +261,6 @@ export function DashboardPage() {
     }
   }
 
-  const isRevenue = (t: Transaction) => ['income', 'revenue'].includes(t.type.toLowerCase())
-  const isExpense = (t: Transaction) => ['expense', 'spending'].includes(t.type.toLowerCase())
-
   const totalExpense = transactions
     .filter(isExpense)
     .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
@@ -230,6 +268,12 @@ export function DashboardPage() {
   const totalRevenue = transactions
     .filter(isRevenue)
     .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
+
+  // Types like Assets/Equities/Liabilities aren't expense or revenue, but
+  // they're still real transactions — track them instead of silently
+  // dropping them from every total on this page.
+  const otherTransactions = transactions.filter(isOther)
+  const totalOther = otherTransactions.reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
 
   const remaining = Math.max(0, monthlyBudget - totalExpense)
   const txCount = transactions.length
@@ -374,7 +418,22 @@ export function DashboardPage() {
           sub={timeframe === 'monthly' ? 'this month' : 'this year'}
           icon="📊"
         />
+        {totalOther > 0 && (
+          <StatCard
+            label="Other Activity"
+            value={formatCurrency(totalOther)}
+            sub={`${otherTransactions.length} non-expense/revenue entries`}
+            icon="📁"
+          />
+        )}
       </div>
+
+      {monthlyTrend.length > 0 && (
+        <Card className="dashboard__trend-card">
+          <h2 className="dashboard__section-title">6-Month Trend</h2>
+          <TrendChart data={monthlyTrend} />
+        </Card>
+      )}
 
       <div className="dashboard__grid">
         <Card className="dashboard__budget-card">
@@ -393,17 +452,14 @@ export function DashboardPage() {
                       <div className="budget-edit-field">
                         <span className="budget-currency">₱</span>
                         <input
-                          type="text"
-                          value={budgetInput ? formatNumberWithSeparators(parseFloat(budgetInput)) : ''}
-                          onChange={(e) => {
-                            // Remove non-numeric characters except decimal point
-                            const value = e.target.value.replace(/[^0-9.]/g, '')
-                            setBudgetInput(value)
-                          }}
+                          type="number"
+                          value={budgetInput}
+                          onChange={(e) => setBudgetInput(e.target.value)}
                           className="budget-edit-input-field"
                           min="0"
                           step="100"
                           placeholder="0"
+                          autoFocus
                         />
                       </div>
                     </div>
@@ -517,13 +573,9 @@ export function DashboardPage() {
                     <div className="budget-category-field">
                       <span className="budget-currency">₱</span>
                       <input
-                        type="text"
-                        value={categoryBudgets[category] ? formatNumberWithSeparators(categoryBudgets[category]) : ''}
-                        onChange={(e) => {
-                          // Remove non-numeric characters except decimal point
-                          const value = e.target.value.replace(/[^0-9.]/g, '')
-                          handleCategoryBudgetChange(category, value)
-                        }}
+                        type="number"
+                        value={categoryBudgets[category] || ''}
+                        onChange={(e) => handleCategoryBudgetChange(category, e.target.value)}
                         className="budget-category-input-field"
                         min="0"
                         step="100"
