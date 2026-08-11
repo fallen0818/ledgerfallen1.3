@@ -3,6 +3,8 @@
  * Supports CSV and PDF (print-based) export
  */
 
+import { isExpenseType } from './transactionTypes'
+
 interface Transaction {
     transaction_date?: string
     description?: string
@@ -183,7 +185,7 @@ export function exportVarianceReportToCSV(transactions: Transaction[], budgets: 
     }
 
     // Group only expenses by category (ignore income/revenue for the variance report)
-    const isExpense = (t: Transaction) => ['expense', 'spending', 'spent'].includes(t.type?.toLowerCase() || '')
+    const isExpense = (t: Transaction) => isExpenseType(t.type)
     const spentByCategory: Record<string, number> = transactions
         .filter(isExpense)
         .reduce((acc, t) => {
@@ -191,10 +193,14 @@ export function exportVarianceReportToCSV(transactions: Transaction[], budgets: 
             return acc
         }, {} as Record<string, number>)
 
+    // 'Total' is the overall monthly budget limit, not a real spending
+    // category — exclude it so it doesn't show up as a fake row in export.
+    const realBudgets = budgets.filter((b) => b.category !== 'Total')
+
     // Collect all categories (from both budgets and expenses)
     const allCategories = [
         ...new Set([
-            ...budgets.map((b) => b.category),
+            ...realBudgets.map((b) => b.category),
             ...Object.keys(spentByCategory),
         ]),
     ].sort()
@@ -209,7 +215,7 @@ export function exportVarianceReportToCSV(transactions: Transaction[], budgets: 
 
     // Convert each category to CSV row
     const rows = allCategories.map((cat) => {
-        const budgeted = Number(budgets.find((b) => b.category === cat)?.amount ?? 0)
+        const budgeted = Number(realBudgets.find((b) => b.category === cat)?.amount ?? 0)
         const actual = spentByCategory[cat] || 0
         const variance = budgeted - actual
         const isOver = variance < 0

@@ -208,10 +208,10 @@ export function validateImport(transactions: TransactionImport[], options: { req
             rowErrors.push('Invalid date format')
         }
 
-        // Validate type
-        if (tx.type && !['income', 'expense', 'revenue', 'spending'].includes(tx.type.toLowerCase())) {
-            rowErrors.push('Invalid type (must be income, expense, revenue, or spending)')
-        }
+        // Note: no longer restricting to a fixed whitelist of type values —
+        // this app supports arbitrary custom types (see typeService.createType),
+        // and Assets/Equities/Liabilities are legitimate real types that were
+        // being incorrectly rejected here before.
 
         if (rowErrors.length > 0) {
             invalid.push({ ...tx, rowIndex: index + 2, errors: rowErrors })

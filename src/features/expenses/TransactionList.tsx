@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { formatCurrency } from '../../utils/currency'
 import { formatDate } from '../../utils/date'
+import { isRevenueType, isExpenseType } from '../../utils/transactionTypes'
 import { Button } from '../../components/Shared/Button'
 import { ConfirmDialog } from '../../components/Shared/ConfirmDialog'
 import './TransactionList.css'
@@ -74,11 +75,11 @@ export function TransactionList({ transactions, loading, onDelete, onEdit }: {
   // Calculate totals
   const totals = useMemo(() => {
     const totalRevenue = transactions
-      .filter(tx => ['income', 'revenue'].includes(tx.type.toLowerCase()))
+      .filter(tx => isRevenueType(tx.type))
       .reduce((sum, tx) => sum + parseFloat(tx.amount), 0)
 
     const totalExpenses = transactions
-      .filter(tx => ['expense', 'spending', 'spent'].includes(tx.type.toLowerCase()))
+      .filter(tx => isExpenseType(tx.type))
       .reduce((sum, tx) => sum + parseFloat(tx.amount), 0)
 
     const net = totalRevenue - totalExpenses

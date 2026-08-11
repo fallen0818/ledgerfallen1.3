@@ -8,6 +8,7 @@ import { getCurrentMonth, getYearRange, getYearsRange } from '../../utils/date'
 import { getTotalBudget, getTotalBudgetByYear, getBudgetCategories, upsertBudget } from '../../services/budgetService'
 import { getTransactions } from '../../services/transactionService'
 import { TrendChart } from './TrendChart'
+import { isRevenueType, isExpenseType, isOtherType } from '../../utils/transactionTypes'
 import './DashboardPage.css'
 
 interface Transaction {
@@ -81,9 +82,9 @@ export function DashboardPage() {
   const [previousPeriodBreakdown, setPreviousPeriodBreakdown] = useState<Record<string, number>>({})
   const [monthlyTrend, setMonthlyTrend] = useState<{ monthLabel: string; expense: number; revenue: number }[]>([])
 
-  const isRevenue = (t: Transaction) => ['income', 'revenue', 'earning', 'earnings'].includes((t.type || '').toLowerCase())
-  const isExpense = (t: Transaction) => ['expense', 'spending', 'cost', 'costs'].includes((t.type || '').toLowerCase())
-  const isOther = (t: Transaction) => !isRevenue(t) && !isExpense(t)
+  const isRevenue = (t: Transaction) => isRevenueType(t.type)
+  const isExpense = (t: Transaction) => isExpenseType(t.type)
+  const isOther = (t: Transaction) => isOtherType(t.type)
 
   // Fetch the last 6 months of Expense/Revenue totals for the trend chart.
   // Independent of the Monthly/Yearly toggle above — always shows a rolling
@@ -189,7 +190,7 @@ export function DashboardPage() {
         const prevTransactions = await getTransactions(prevRange)
         const breakdown: Record<string, number> = {}
         prevTransactions
-          .filter((t: any) => ['expense', 'spending'].includes((t.type || '').toLowerCase()))
+          .filter((t: any) => isExpenseType(t.type))
           .forEach((tx: any) => {
             const category = tx.category_name || 'Uncategorized'
             breakdown[category] = (breakdown[category] || 0) + Number(tx.amount)

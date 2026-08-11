@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { getTransactions } from '../../services/transactionService'
 import { getUserBudgets } from '../../services/budgetService'
+import { useAuth } from '../../hooks/useAuth'
 import { VarianceReport } from './VarianceReport'
 import { exportVarianceReportToCSV } from '../../utils/exportUtils'
 import { getCurrentMonth } from '../../utils/date'
@@ -24,6 +25,7 @@ interface Budget {
 }
 
 export function AuditPage() {
+  const { user } = useAuth()
   const [month, setMonth] = useState(getCurrentMonth())
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [budgets, setBudgets] = useState<Budget[]>([])
@@ -42,13 +44,12 @@ export function AuditPage() {
   }
 
   useEffect(() => {
+    if (!user?.id) return
     setLoading(true)
     setError(null)
-    console.log('AuditPage - Fetching data for month:', month)
 
-    Promise.all([getTransactions(month), getUserBudgets('f4e2af28-f270-4c19-90a8-81e85280b628', month)])
+    Promise.all([getTransactions(month), getUserBudgets(user.id, month)])
       .then(([txs, budgs]) => {
-        console.log('AuditPage - Data loaded:', { transactions: txs.length, budgets: budgs.length })
         setTransactions(txs)
         setBudgets(budgs)
       })
@@ -57,10 +58,9 @@ export function AuditPage() {
         setError(err.message)
       })
       .finally(() => {
-        console.log('AuditPage - Loading complete')
         setLoading(false)
       })
-  }, [month])
+  }, [month, user?.id])
 
   return (
     <div className="audit-page">

@@ -1,4 +1,5 @@
 import { formatCurrency } from '../../utils/currency'
+import { isExpenseType } from '../../utils/transactionTypes'
 import './VarianceReport.css'
 
 interface Transaction {
@@ -17,8 +18,10 @@ interface VarianceReportProps {
   budgets: Budget[]
 }
 
+const TOTAL_SENTINEL = 'Total'
+
 export function VarianceReport({ transactions, budgets }: VarianceReportProps) {
-  const isExpense = (t: Transaction) => ['expense', 'spending', 'spent'].includes(t.type.toLowerCase())
+  const isExpense = (t: Transaction) => isExpenseType(t.type)
 
   // Group only expenses by category (ignore income/revenue for the variance report)
   const spentByCategory: Record<string, number> = transactions
@@ -28,10 +31,14 @@ export function VarianceReport({ transactions, budgets }: VarianceReportProps) {
       return acc
     }, {} as Record<string, number>)
 
+  // 'Total' is the overall monthly budget limit, not a real spending
+  // category — exclude it here so it doesn't show up as a fake row.
+  const realBudgets = budgets.filter((b) => b.category !== TOTAL_SENTINEL)
+
   // Collect all categories (from both budgets and expenses)
   const allCategories = [
     ...new Set([
-      ...budgets.map((b) => b.category),
+      ...realBudgets.map((b) => b.category),
       ...Object.keys(spentByCategory),
     ]),
   ].sort()
@@ -50,7 +57,7 @@ export function VarianceReport({ transactions, budgets }: VarianceReportProps) {
         <span>Status</span>
       </div>
       {allCategories.map((cat) => {
-        const budgeted = Number(budgets.find((b) => b.category === cat)?.amount ?? 0)
+        const budgeted = Number(realBudgets.find((b) => b.category === cat)?.amount ?? 0)
         const actual = spentByCategory[cat] ?? 0
         const variance = budgeted - actual
         const isOver = variance < 0

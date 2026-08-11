@@ -5,6 +5,7 @@ import { RevenueExpenseReport } from './RevenueExpenseReport'
 import { exportReport } from '../../utils/exportUtils'
 import { Button } from '../../components/Shared/Button'
 import { useToast } from '../../components/Shared/Toast'
+import { isRevenueType, isExpenseType } from '../../utils/transactionTypes'
 import './ReportsPage.css'
 
 interface Transaction {
@@ -60,10 +61,10 @@ export function ReportsPage() {
   // Calculate summary for export
   const summary = useMemo(() => {
     const revenue = transactions
-      .filter(t => ['income', 'revenue'].includes(t.type?.toLowerCase()))
+      .filter(t => isRevenueType(t.type))
       .reduce((sum, t) => sum + Number(t.amount), 0)
     const expenses = transactions
-      .filter(t => ['expense', 'spending', 'spent'].includes(t.type?.toLowerCase()))
+      .filter(t => isExpenseType(t.type))
       .reduce((sum, t) => sum + Number(t.amount), 0)
     return {
       revenue,

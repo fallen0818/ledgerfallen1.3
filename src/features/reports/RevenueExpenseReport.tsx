@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Card } from '../../components/Shared/Card'
 import { formatCurrency } from '../../utils/currency'
+import { isRevenueType, isExpenseType } from '../../utils/transactionTypes'
 import './RevenueExpenseReport.css'
 
 interface Transaction {
@@ -14,8 +15,8 @@ interface Transaction {
 
 export function RevenueExpenseReport({ transactions }: { transactions: Transaction[] }) {
   const [visibleCount, setVisibleCount] = useState(50)
-  const isRevenue = (t: Transaction) => ['income', 'revenue'].includes(t.type.toLowerCase())
-  const isExpense = (t: Transaction) => ['expense', 'spending', 'spent'].includes(t.type.toLowerCase())
+  const isRevenue = (t: Transaction) => isRevenueType(t.type)
+  const isExpense = (t: Transaction) => isExpenseType(t.type)
 
   const revenue = transactions
     .filter(isRevenue)
