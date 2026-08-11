@@ -329,6 +329,12 @@
   box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
+.budget-edit-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
 .budget-edit-icon {
   font-size: 1.125rem;
 }

@@ -10,35 +10,7 @@ interface Budget {
   year?: number
 }
 
-/**
- * Fetch budgets for a given month.
- * @param {string} [month] — 'YYYY-MM'
- */
-export async function getBudgets(month = getCurrentMonth()): Promise<Budget[]> {
-  const dbMonth = convertToDatabaseMonth(month)
-  const { data, error } = await supabase
-    .from('budgets')
-    .select('*')
-    .eq('month', dbMonth)
-  if (error) throw error
-  return data || []
-}
-
-/**
- * Fetch budgets for a specific user and month.
- * @param {string} userId — user ID
- * @param {string} [month] — 'YYYY-MM'
- */
-export async function getUserBudgets(userId: string, month = getCurrentMonth()): Promise<Budget[]> {
-  const dbMonth = convertToDatabaseMonth(month)
-  const { data, error } = await supabase
-    .from('budgets')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('month', dbMonth)
-  if (error) throw error
-  return data || []
-}
+const TOTAL_SENTINEL = 'Total'
 
 /**
  * Extract year from month string (YYYY-MM format)
@@ -50,26 +22,64 @@ function extractYearFromMonth(month: string): number {
 }
 
 /**
+ * Fetch budgets for a given month.
+ * IMPORTANT: month names repeat every year ("Aug" 2025 and "Aug" 2026 are
+ * both stored as "Aug"), so every query here also filters by year — without
+ * it, budgets from different years sharing a month name get merged together.
+ * @param {string} [month] — 'YYYY-MM'
+ */
+export async function getBudgets(month = getCurrentMonth()): Promise<Budget[]> {
+  const dbMonth = convertToDatabaseMonth(month)
+  const year = extractYearFromMonth(month)
+  const { data, error } = await supabase
+    .from('budgets')
+    .select('*')
+    .eq('month', dbMonth)
+    .eq('year', year)
+  if (error) throw error
+  return data || []
+}
+
+/**
+ * Fetch budgets for a specific user and month.
+ * @param {string} userId — user ID
+ * @param {string} [month] — 'YYYY-MM'
+ */
+export async function getUserBudgets(userId: string, month = getCurrentMonth()): Promise<Budget[]> {
+  const dbMonth = convertToDatabaseMonth(month)
+  const year = extractYearFromMonth(month)
+  const { data, error } = await supabase
+    .from('budgets')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('month', dbMonth)
+    .eq('year', year)
+  if (error) throw error
+  return data || []
+}
+
+/**
  * Upsert (create or update) a budget entry for a category.
+ * Pass category: 'Total' to set the overall month budget limit (kept
+ * separate from per-category rows — see getTotalBudget).
  * @param {{ user_id: string, category: string, amount: number, month: string }} budget
  */
 export async function upsertBudget(budget: Omit<Budget, 'id'>): Promise<Budget> {
   const dbMonth = convertToDatabaseMonth(budget.month)
   const year = extractYearFromMonth(budget.month)
 
-  // First try to find existing budget
+  // First try to find existing budget — must match year too, or saving a
+  // budget for e.g. Aug 2026 would silently overwrite Aug 2025's row.
   const { data: existingBudget, error: findError } = await supabase
     .from('budgets')
     .select('*')
     .eq('user_id', budget.user_id)
     .eq('category', budget.category)
     .eq('month', dbMonth)
-    .single()
+    .eq('year', year)
+    .maybeSingle()
 
-  if (findError && findError.code !== 'PGRST116') {
-    // PGRST116 means no rows found, which is expected
-    throw findError
-  }
+  if (findError) throw findError
 
   if (existingBudget) {
     // Update existing budget
@@ -105,29 +115,34 @@ export async function deleteBudget(id: string): Promise<void> {
 }
 
 /**
- * Get total budget for a month by summing all categories.
+ * Get the overall budget LIMIT for a month — this is the single 'Total'
+ * row you set via "Edit Budget", not a sum of every category budget too.
+ * (Previously this summed every row for the month, which double-counted
+ * the Total row together with every per-category row.)
  * @param {string} userId — user ID
  * @param {string} [month] — 'YYYY-MM'
  */
 export async function getTotalBudget(userId: string, month = getCurrentMonth()): Promise<number> {
   const dbMonth = convertToDatabaseMonth(month)
+  const year = extractYearFromMonth(month)
   const { data, error } = await supabase
     .from('budgets')
-    .select('amount', { count: 'exact' })
+    .select('amount')
     .eq('user_id', userId)
     .eq('month', dbMonth)
+    .eq('year', year)
+    .eq('category', TOTAL_SENTINEL)
+    .maybeSingle()
 
   if (error) throw error
-
-  if (!data || data.length === 0) {
-    return 0
-  }
-
-  return data.reduce((sum, budget) => sum + parseFloat(budget.amount), 0)
+  if (!data) return 0
+  return parseFloat(data.amount)
 }
 
 /**
  * Fetch budget categories, amounts, and months for a user.
+ * Excludes the 'Total' sentinel row — that's the overall limit, not a real
+ * spending category, so it shouldn't show up in the category budget list.
  * @param {string} userId — user ID
  * @param {string} [month] — 'YYYY-MM' (optional, if not provided gets all months)
  */
@@ -136,10 +151,12 @@ export async function getBudgetCategories(userId: string, month?: string): Promi
     .from('budgets')
     .select('category, amount, month')
     .eq('user_id', userId)
+    .neq('category', TOTAL_SENTINEL)
 
   if (month) {
     const dbMonth = convertToDatabaseMonth(month)
-    query = query.eq('month', dbMonth)
+    const year = extractYearFromMonth(month)
+    query = query.eq('month', dbMonth).eq('year', year)
   }
 
   const { data, error } = await query
@@ -160,7 +177,7 @@ export async function getBudgetCategories(userId: string, month?: string): Promi
 }
 
 /**
- * Fetch budgets for a specific user and year.
+ * Fetch budgets for a specific user and year (across all months).
  * @param {string} userId — user ID
  * @param {number} year — calendar year
  */
@@ -175,16 +192,19 @@ export async function getUserBudgetsByYear(userId: string, year: number): Promis
 }
 
 /**
- * Get total budget for a year by summing all categories and months.
+ * Get the overall budget LIMIT for a full year — the sum of each month's
+ * 'Total' row across the year (not every category budget too — same
+ * double-counting fix as getTotalBudget, applied across 12 months).
  * @param {string} userId — user ID
  * @param {number} year — calendar year
  */
 export async function getTotalBudgetByYear(userId: string, year: number): Promise<number> {
   const { data, error } = await supabase
     .from('budgets')
-    .select('amount', { count: 'exact' })
+    .select('amount')
     .eq('user_id', userId)
     .eq('year', year)
+    .eq('category', TOTAL_SENTINEL)
 
   if (error) throw error
 

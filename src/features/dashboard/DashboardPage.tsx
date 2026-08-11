@@ -5,7 +5,7 @@ import { Card } from '../../components/Shared/Card'
 import { StatCardSkeleton } from '../../components/Shared/Skeleton'
 import { formatCurrency, formatNumberWithSeparators } from '../../utils/currency'
 import { getCurrentMonth, getYearRange, getYearsRange } from '../../utils/date'
-import { getTotalBudget, getBudgetCategories, upsertBudget } from '../../services/budgetService'
+import { getTotalBudget, getTotalBudgetByYear, getBudgetCategories, upsertBudget } from '../../services/budgetService'
 import { getTransactions } from '../../services/transactionService'
 import './DashboardPage.css'
 
@@ -84,8 +84,12 @@ export function DashboardPage() {
     if (!user?.id) return
     async function fetchData() {
       try {
-        // Fetch total budget
-        const total = await getTotalBudget(user!.id, dateRange)
+        // Yearly view needs the year-based functions — passing a bare year
+        // string like "2026" into the month-based ones silently breaks
+        // (they expect "YYYY-MM" and would parse NaN out of "2026").
+        const total = timeframe === 'yearly'
+          ? await getTotalBudgetByYear(user!.id, selectedYear)
+          : await getTotalBudget(user!.id, dateRange)
 
         if (total > 0) {
           setMonthlyBudget(total)
@@ -102,11 +106,17 @@ export function DashboardPage() {
       }
     }
     fetchData()
-  }, [dateRange, user?.id])
+  }, [dateRange, timeframe, selectedYear, user?.id])
 
-  // Initialize category budgets with existing data
+  // Initialize category budgets with existing data — only meaningful in
+  // Monthly view; per-category budgets are set per specific month, and
+  // there's no defined "yearly category budget" in this schema.
   useEffect(() => {
     if (!user?.id) return
+    if (timeframe === 'yearly') {
+      setCategoryBudgets({})
+      return
+    }
     async function loadCategoryBudgets() {
       try {
         const budgets = await getBudgetCategories(user!.id, dateRange)
@@ -120,7 +130,7 @@ export function DashboardPage() {
       }
     }
     loadCategoryBudgets()
-  }, [dateRange, user?.id])
+  }, [dateRange, timeframe, user?.id])
 
   // Fetch previous period data for real trend comparison
   useEffect(() => {
@@ -416,6 +426,10 @@ export function DashboardPage() {
                       </button>
                     </div>
                   </div>
+                ) : timeframe === 'yearly' ? (
+                  <span className="budget-edit-note" title="Budgets are set per month — switch to Monthly to edit">
+                    Switch to Monthly to edit budgets
+                  </span>
                 ) : (
                   <>
                     <button
@@ -472,6 +486,10 @@ export function DashboardPage() {
                       Cancel
                     </button>
                   </>
+                ) : timeframe === 'yearly' ? (
+                  <span className="budget-edit-note" title="Category budgets are set per month — switch to Monthly to edit">
+                    Switch to Monthly to edit
+                  </span>
                 ) : (
                   <button
                     className="budget-edit-trigger"
