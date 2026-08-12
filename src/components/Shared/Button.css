@@ -39,6 +39,18 @@
   color: var(--text-primary);
 }
 
+/* Secondary — visually distinct from ghost (filled, not just outlined) but
+   calmer than primary; used for non-primary actions like Export/Import. */
+.btn--secondary {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+}
+.btn--secondary:hover {
+  background: var(--border);
+  border-color: var(--border-hover);
+}
+
 /* Danger */
 .btn--danger {
   background: var(--danger-bg);

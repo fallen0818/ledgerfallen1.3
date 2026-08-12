@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { flushSync } from 'react-dom'
 import { Card } from '../../components/Shared/Card'
 import { formatCurrency } from '../../utils/currency'
 import { isRevenueType, isExpenseType } from '../../utils/transactionTypes'
@@ -13,10 +14,45 @@ interface Transaction {
   category_name: string
 }
 
+const DEFAULT_VISIBLE_COUNT = 50
+
 export function RevenueExpenseReport({ transactions }: { transactions: Transaction[] }) {
-  const [visibleCount, setVisibleCount] = useState(50)
+  const [visibleCount, setVisibleCount] = useState(DEFAULT_VISIBLE_COUNT)
+  const [isPrinting, setIsPrinting] = useState(false)
   const isRevenue = (t: Transaction) => isRevenueType(t.type)
   const isExpense = (t: Transaction) => isExpenseType(t.type)
+
+  // Only the first `visibleCount` rows actually exist in the DOM (see below)
+  // — printing can't capture rows that were never rendered. Expand to the
+  // full list right before any print (our Export PDF button or a direct
+  // Ctrl+P), then restore normal pagination afterward. Also switch to
+  // zero-filtered rows for print specifically — on-screen browsing still
+  // shows everything, including zero-amount rows.
+  //
+  // flushSync is required here: React normally applies state updates
+  // asynchronously, so without it the browser can take its print snapshot
+  // before React actually finishes rendering all rows into the DOM.
+  useEffect(() => {
+    const showAll = () => flushSync(() => {
+      setVisibleCount(transactions.length)
+      setIsPrinting(true)
+    })
+    const restore = () => flushSync(() => {
+      setVisibleCount(DEFAULT_VISIBLE_COUNT)
+      setIsPrinting(false)
+    })
+    window.addEventListener('beforeprint', showAll)
+    window.addEventListener('afterprint', restore)
+    return () => {
+      window.removeEventListener('beforeprint', showAll)
+      window.removeEventListener('afterprint', restore)
+    }
+  }, [transactions.length])
+
+  // Print output skips zero-amount rows; normal browsing shows everything.
+  const displayedTransactions = isPrinting
+    ? transactions.filter((t) => Number(t.amount) !== 0)
+    : transactions.slice(0, visibleCount)
 
   const revenue = transactions
     .filter(isRevenue)
@@ -61,7 +97,7 @@ export function RevenueExpenseReport({ transactions }: { transactions: Transacti
                 </tr>
               </thead>
               <tbody>
-                {transactions.slice(0, visibleCount).map((tx: Transaction) => (
+                {displayedTransactions.map((tx: Transaction) => (
                   <tr key={tx.id} className={`re-row--${tx.type.toLowerCase()}`}>
                     <td>{tx.transaction_date}</td>
                     <td>{tx.description}</td>
@@ -72,7 +108,7 @@ export function RevenueExpenseReport({ transactions }: { transactions: Transacti
                 ))}
               </tbody>
             </table>
-            {transactions.length > visibleCount && (
+            {!isPrinting && transactions.length > visibleCount && (
               <div className="re-report__actions">
                 <button
                   className="re-report__next-btn"

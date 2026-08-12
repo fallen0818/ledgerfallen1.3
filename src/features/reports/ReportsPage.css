@@ -64,6 +64,35 @@
 
 /* Print styles for PDF export */
 @media print {
+  /* The app shell's content area is a scrollable, viewport-sized box on
+     screen — printing needs it to expand to its full natural height,
+     otherwise only whatever's currently scrolled into view gets captured. */
+  .app-layout,
+  .app-layout__main,
+  .app-layout__content {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Force light, readable colors for print regardless of which theme is
+     active on screen — dark mode's near-white text would otherwise print
+     nearly invisible on a white page, since only text color (not the dark
+     background) tends to survive printing by default. */
+  :root,
+  [data-theme="dark"] {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --surface-hover: #f4f6f4;
+    --border: #cccccc;
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --text-muted: #666666;
+    --accent: #0f6e52;
+    --success: #0f6e52;
+    --danger: #a3352b;
+  }
 
   /* Hide navigation and sidebar when printing */
   .sidebar,
