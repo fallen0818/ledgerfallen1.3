@@ -11,6 +11,7 @@ interface Budget {
 }
 
 const TOTAL_SENTINEL = 'Total'
+const TOTAL_REVENUE_SENTINEL = 'Total Revenue'
 
 /**
  * Extract year from month string (YYYY-MM format)
@@ -152,6 +153,7 @@ export async function getBudgetCategories(userId: string, month?: string): Promi
     .select('category, amount, month')
     .eq('user_id', userId)
     .neq('category', TOTAL_SENTINEL)
+    .neq('category', TOTAL_REVENUE_SENTINEL)
 
   if (month) {
     const dbMonth = convertToDatabaseMonth(month)
@@ -205,6 +207,54 @@ export async function getTotalBudgetByYear(userId: string, year: number): Promis
     .eq('user_id', userId)
     .eq('year', year)
     .eq('category', TOTAL_SENTINEL)
+
+  if (error) throw error
+
+  if (!data || data.length === 0) {
+    return 0
+  }
+
+  return data.reduce((sum, budget) => sum + parseFloat(budget.amount), 0)
+}
+
+/**
+ * Get the Revenue TARGET for a month — mirrors getTotalBudget, but for
+ * revenue instead of expense. Stored as its own sentinel category
+ * ('Total Revenue') so it never gets confused with the expense budget or
+ * counted as a real spending category.
+ * @param {string} userId — user ID
+ * @param {string} [month] — 'YYYY-MM'
+ */
+export async function getTotalRevenueBudget(userId: string, month = getCurrentMonth()): Promise<number> {
+  const dbMonth = convertToDatabaseMonth(month)
+  const year = extractYearFromMonth(month)
+  const { data, error } = await supabase
+    .from('budgets')
+    .select('amount')
+    .eq('user_id', userId)
+    .eq('month', dbMonth)
+    .eq('year', year)
+    .eq('category', TOTAL_REVENUE_SENTINEL)
+    .maybeSingle()
+
+  if (error) throw error
+  if (!data) return 0
+  return parseFloat(data.amount)
+}
+
+/**
+ * Get the Revenue TARGET for a full year — sum of each month's Revenue
+ * target row across the year. Mirrors getTotalBudgetByYear.
+ * @param {string} userId — user ID
+ * @param {number} year — calendar year
+ */
+export async function getTotalRevenueBudgetByYear(userId: string, year: number): Promise<number> {
+  const { data, error } = await supabase
+    .from('budgets')
+    .select('amount')
+    .eq('user_id', userId)
+    .eq('year', year)
+    .eq('category', TOTAL_REVENUE_SENTINEL)
 
   if (error) throw error
 

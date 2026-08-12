@@ -6,7 +6,7 @@ import { Card } from '../../components/Shared/Card'
 import { StatCardSkeleton } from '../../components/Shared/Skeleton'
 import { formatCurrency } from '../../utils/currency'
 import { getCurrentMonth, getYearRange, getYearsRange } from '../../utils/date'
-import { getTotalBudget, getTotalBudgetByYear, getBudgetCategories, upsertBudget } from '../../services/budgetService'
+import { getTotalBudget, getTotalBudgetByYear, getTotalRevenueBudget, getTotalRevenueBudgetByYear, getBudgetCategories, upsertBudget } from '../../services/budgetService'
 import { getTransactions } from '../../services/transactionService'
 import { TrendChart } from './TrendChart'
 import { isRevenueType, isExpenseType, isOtherType } from '../../utils/transactionTypes'
@@ -114,6 +114,9 @@ export function DashboardPage() {
 
   const { transactions = [], loading: txLoading = true, refetch } = useTransactions(dateRange)
   const [monthlyBudget, setMonthlyBudget] = useState(DEFAULT_BUDGET)
+  const [revenueTarget, setRevenueTarget] = useState(0)
+  const [isEditingRevenueTarget, setIsEditingRevenueTarget] = useState(false)
+  const [revenueTargetInput, setRevenueTargetInput] = useState('0')
   const [loading, setLoading] = useState(true)
   const [isEditingBudget, setIsEditingBudget] = useState(false)
   const [budgetInput, setBudgetInput] = useState(DEFAULT_BUDGET.toString())
@@ -186,6 +189,13 @@ export function DashboardPage() {
         const total = timeframe === 'yearly'
           ? await getTotalBudgetByYear(user!.id, selectedYear)
           : await getTotalBudget(user!.id, dateRange)
+
+        const revTarget = timeframe === 'yearly'
+          ? await getTotalRevenueBudgetByYear(user!.id, selectedYear)
+          : await getTotalRevenueBudget(user!.id, dateRange)
+
+        setRevenueTarget(revTarget)
+        setRevenueTargetInput(revTarget.toString())
 
         if (total > 0) {
           setMonthlyBudget(total)
@@ -287,6 +297,31 @@ export function DashboardPage() {
     loadYearOverYear()
   }, [timeframe, selectedMonth, refreshKey])
 
+  const handleRevenueTargetChange = async () => {
+    const newTarget = parseFloat(revenueTargetInput)
+    if (isNaN(newTarget) || newTarget < 0) {
+      alert('Please enter a valid revenue target')
+      return
+    }
+
+    try {
+      if (user?.id) {
+        await upsertBudget({
+          user_id: user.id,
+          category: 'Total Revenue',
+          amount: newTarget,
+          month: dateRange
+        })
+      }
+      setRevenueTarget(newTarget)
+      setIsEditingRevenueTarget(false)
+    } catch (err) {
+      console.error('Error updating revenue target:', err)
+      alert('Failed to update revenue target')
+    }
+  }
+
+
   const handleBudgetChange = async () => {
     const newBudget = parseFloat(budgetInput)
     if (isNaN(newBudget) || newBudget <= 0) {
@@ -370,6 +405,7 @@ export function DashboardPage() {
     .map(([category, amount]) => ({ label: category, value: amount, change: 0 }))
 
   const remaining = Math.max(0, monthlyBudget - totalExpense)
+  const revenueVariance = totalRevenue - revenueTarget
   const txCount = transactions.length
 
   // Calculate category breakdown
@@ -659,6 +695,86 @@ export function DashboardPage() {
                   {formatCurrency(remaining)}
                 </span>
               </div>
+            </div>
+          </div>
+
+          <div className="budget-header budget-header--revenue">
+            <div className="budget-title">
+              <h4 className="budget-title__main">Revenue Target</h4>
+              <span className="budget-title__period">{displayLabel}</span>
+            </div>
+            <div className="budget-actions">
+              {isEditingRevenueTarget ? (
+                <div className="budget-edit-controls">
+                  <div className="budget-edit-input">
+                    <label className="budget-edit-label">Set Revenue Target</label>
+                    <div className="budget-edit-field">
+                      <span className="budget-currency">₱</span>
+                      <input
+                        type="number"
+                        value={revenueTargetInput}
+                        onChange={(e) => setRevenueTargetInput(e.target.value)}
+                        className="budget-edit-input-field"
+                        min="0"
+                        step="100"
+                        placeholder="0"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  <div className="budget-edit-buttons">
+                    <button
+                      className="budget-btn budget-btn--primary"
+                      onClick={handleRevenueTargetChange}
+                      disabled={isNaN(parseFloat(revenueTargetInput)) || parseFloat(revenueTargetInput) < 0}
+                    >
+                      Save
+                    </button>
+                    <button
+                      className="budget-btn budget-btn--secondary"
+                      onClick={() => {
+                        setIsEditingRevenueTarget(false)
+                        setRevenueTargetInput(revenueTarget.toString())
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : timeframe === 'yearly' ? (
+                <span className="budget-edit-note" title="Revenue targets are set per month — switch to Monthly to edit">
+                  Switch to Monthly to edit
+                </span>
+              ) : (
+                <button
+                  className="budget-edit-trigger"
+                  onClick={() => setIsEditingRevenueTarget(true)}
+                  title="Edit revenue target"
+                >
+                  <span className="budget-edit-icon">🎯</span>
+                  <span className="budget-edit-text">Edit Target</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="budget-values">
+            <div className="budget-value budget-value--limit">
+              <span className="budget-value__label">Revenue Target</span>
+              <span className="budget-value__amount">{formatCurrency(revenueTarget)}</span>
+            </div>
+            <div className="budget-value">
+              <span className="budget-value__label">Actual Revenue</span>
+              <span className="budget-value__amount" style={{ color: 'var(--success)' }}>{formatCurrency(totalRevenue)}</span>
+            </div>
+            <div className="budget-value">
+              <span className="budget-value__label">{revenueVariance >= 0 ? 'Surplus' : 'Shortfall'}</span>
+              <span className="budget-value__amount" style={{
+                color: revenueVariance >= 0 ? 'var(--success)' : 'var(--danger)',
+                fontWeight: '800'
+              }}>
+                {revenueTarget > 0 ? `${revenueVariance >= 0 ? '+' : ''}${formatCurrency(revenueVariance)}` : '—'}
+              </span>
             </div>
           </div>
 

@@ -344,6 +344,12 @@
   gap: var(--space-4);
 }
 
+.budget-header--revenue {
+  margin-top: var(--space-2);
+  padding-top: var(--space-5);
+  border-top: 1px dashed var(--border);
+}
+
 .budget-title {
   display: flex;
   flex-direction: column;

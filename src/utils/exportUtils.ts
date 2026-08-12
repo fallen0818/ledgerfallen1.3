@@ -193,9 +193,10 @@ export function exportVarianceReportToCSV(transactions: Transaction[], budgets: 
             return acc
         }, {} as Record<string, number>)
 
-    // 'Total' is the overall monthly budget limit, not a real spending
-    // category — exclude it so it doesn't show up as a fake row in export.
-    const realBudgets = budgets.filter((b) => b.category !== 'Total')
+    // 'Total' and 'Total Revenue' are the overall monthly budget/target
+    // amounts, not real spending categories — exclude both so they don't
+    // show up as fake rows in the export.
+    const realBudgets = budgets.filter((b) => b.category !== 'Total' && b.category !== 'Total Revenue')
 
     // Collect all categories (from both budgets and expenses)
     const allCategories = [

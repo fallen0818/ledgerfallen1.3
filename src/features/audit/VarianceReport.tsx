@@ -19,6 +19,7 @@ interface VarianceReportProps {
 }
 
 const TOTAL_SENTINEL = 'Total'
+const TOTAL_REVENUE_SENTINEL = 'Total Revenue'
 
 export function VarianceReport({ transactions, budgets }: VarianceReportProps) {
   const isExpense = (t: Transaction) => isExpenseType(t.type)
@@ -33,7 +34,7 @@ export function VarianceReport({ transactions, budgets }: VarianceReportProps) {
 
   // 'Total' is the overall monthly budget limit, not a real spending
   // category — exclude it here so it doesn't show up as a fake row.
-  const realBudgets = budgets.filter((b) => b.category !== TOTAL_SENTINEL)
+  const realBudgets = budgets.filter((b) => b.category !== TOTAL_SENTINEL && b.category !== TOTAL_REVENUE_SENTINEL)
 
   // Collect all categories (from both budgets and expenses)
   const allCategories = [
