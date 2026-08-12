@@ -33,6 +33,35 @@
   background: var(--danger);
 }
 
+.trend-chart__swatch--net {
+  background: var(--brass);
+}
+
+.trend-chart__net-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.trend-chart__net-toggle:hover {
+  border-color: var(--brass);
+  color: var(--text-primary);
+}
+
+.trend-chart__net-toggle--active {
+  background: color-mix(in srgb, var(--brass) 12%, transparent);
+  border-color: var(--brass);
+  color: var(--text-primary);
+}
+
 .trend-chart__bars {
   display: flex;
   align-items: flex-end;
@@ -76,6 +105,31 @@
 
 .trend-chart__bar--expense {
   background: var(--danger);
+}
+
+.trend-chart__bar--net-positive {
+  background: var(--brass);
+}
+
+.trend-chart__bar--net-negative {
+  background: var(--brass);
+  opacity: 0.5;
+}
+
+.trend-chart__net-label {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.trend-chart__net-label--positive {
+  color: var(--success);
+}
+
+.trend-chart__net-label--negative {
+  color: var(--danger);
 }
 
 .trend-chart__month-label {

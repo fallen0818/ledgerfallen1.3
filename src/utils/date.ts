@@ -47,29 +47,31 @@ export function convertFromDatabaseMonth(month: string, year: number = new Date(
 }
 
 /**
- * Gets an array of months for the current year in YYYY-MM format.
+ * Gets an array of months for a given year in YYYY-MM format.
+ * @param {number} [year] - defaults to the current year
  * @returns {string[]}
  */
-export function getYearRange(): string[] {
-  const currentYear = new Date().getFullYear()
+export function getYearRange(year?: number): string[] {
+  const targetYear = year ?? new Date().getFullYear()
   const months = []
   for (let i = 0; i < 12; i++) {
     const month = String(i + 1).padStart(2, '0')
-    months.push(`${currentYear}-${month}`)
+    months.push(`${targetYear}-${month}`)
   }
   return months
 }
 
 /**
- * Gets an array of years for the year selector.
+ * Gets an array of years for the year selector — includes future years so
+ * budgets can be planned ahead of time, not just for past/current data.
  * @param {number} [startYear] - Starting year, defaults to 5 years ago
- * @param {number} [endYear] - Ending year, defaults to current year
+ * @param {number} [endYear] - Ending year, defaults to 5 years from now
  * @returns {number[]}
  */
 export function getYearsRange(startYear?: number, endYear?: number): number[] {
   const currentYear = new Date().getFullYear()
   const start = startYear ?? currentYear - 5
-  const end = endYear ?? currentYear
+  const end = endYear ?? currentYear + 5
 
   const years = []
   for (let year = start; year <= end; year++) {

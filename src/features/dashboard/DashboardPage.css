@@ -65,6 +65,11 @@
   box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
+.dashboard__month-year-controls {
+  display: flex;
+  gap: var(--space-2);
+}
+
 .dashboard__month-selector {
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border);
@@ -110,6 +115,47 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: var(--space-2) var(--space-4);
+}
+
+.dashboard__refresh-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2) var(--space-4);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-left: auto;
+}
+
+.dashboard__refresh-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.dashboard__refresh-btn:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.dashboard__refresh-icon {
+  display: inline-block;
+  font-size: 1rem;
+  transition: transform 0.4s ease;
+}
+
+.dashboard__refresh-btn--spinning .dashboard__refresh-icon {
+  animation: dashboard-refresh-spin 0.6s linear infinite;
+}
+
+@keyframes dashboard-refresh-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .dashboard__year-label {
@@ -176,6 +222,16 @@
   .dashboard__timeframe-btn {
     flex: 1;
     text-align: center;
+  }
+
+  .dashboard__month-year-controls {
+    width: 100%;
+  }
+
+  .dashboard__month-year-controls .dashboard__year-selector,
+  .dashboard__month-year-controls .dashboard__month-selector {
+    flex: 1;
+    min-width: 0;
   }
 
   .dashboard__month-selector {

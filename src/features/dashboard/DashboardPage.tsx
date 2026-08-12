@@ -38,12 +38,13 @@ function StatCard({ label, value, sub, accent, positive, icon }: { label: string
   )
 }
 
-function TrendCard({ title, data, onItemClick, comparisonMode, onComparisonModeChange }: {
+function TrendCard({ title, data, onItemClick, comparisonMode, onComparisonModeChange, showChange = true }: {
   title: string
   data: { label: string; value: number; change: number }[]
   onItemClick?: (label: string) => void
   comparisonMode?: 'previous' | 'yoy'
   onComparisonModeChange?: (mode: 'previous' | 'yoy') => void
+  showChange?: boolean
 }) {
   return (
     <Card className="trend-card">
@@ -81,9 +82,11 @@ function TrendCard({ title, data, onItemClick, comparisonMode, onComparisonModeC
               <span className="trend-item__label">{item.label}</span>
               <span className="trend-item__value">{formatCurrency(item.value)}</span>
             </div>
-            <div className={`trend-item__change ${item.change >= 0 ? 'trend-item__change--positive' : 'trend-item__change--negative'}`}>
-              {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change)}%
-            </div>
+            {showChange && (
+              <div className={`trend-item__change ${item.change >= 0 ? 'trend-item__change--positive' : 'trend-item__change--negative'}`}>
+                {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change)}%
+              </div>
+            )}
             {onItemClick && <span className="trend-item__arrow">→</span>}
           </div>
         ))}
@@ -104,13 +107,12 @@ export function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
 
-  const yearRange = getYearRange()
   const yearsRange = getYearsRange()
 
   // Determine the date range based on timeframe
   const dateRange = timeframe === 'monthly' ? selectedMonth : selectedYear.toString()
 
-  const { transactions = [], loading: txLoading = true } = useTransactions(dateRange)
+  const { transactions = [], loading: txLoading = true, refetch } = useTransactions(dateRange)
   const [monthlyBudget, setMonthlyBudget] = useState(DEFAULT_BUDGET)
   const [loading, setLoading] = useState(true)
   const [isEditingBudget, setIsEditingBudget] = useState(false)
@@ -120,6 +122,18 @@ export function DashboardPage() {
   const [previousPeriodBreakdown, setPreviousPeriodBreakdown] = useState<Record<string, number>>({})
   const [yearOverYearBreakdown, setYearOverYearBreakdown] = useState<Record<string, number>>({})
   const [comparisonMode, setComparisonMode] = useState<'previous' | 'yoy'>('previous')
+  const [refreshKey, setRefreshKey] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true)
+    try {
+      await refetch()
+      setRefreshKey((k) => k + 1)
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 400)
+    }
+  }
   const [monthlyTrend, setMonthlyTrend] = useState<{ monthLabel: string; expense: number; revenue: number }[]>([])
 
   const isRevenue = (t: Transaction) => isRevenueType(t.type)
@@ -159,7 +173,7 @@ export function DashboardPage() {
     }
     loadTrend()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id])
+  }, [user?.id, refreshKey])
 
   // Fetch budget and categories from services
   useEffect(() => {
@@ -188,7 +202,7 @@ export function DashboardPage() {
       }
     }
     fetchData()
-  }, [dateRange, timeframe, selectedYear, user?.id])
+  }, [dateRange, timeframe, selectedYear, user?.id, refreshKey])
 
   // Initialize category budgets with existing data — only meaningful in
   // Monthly view; per-category budgets are set per specific month, and
@@ -212,7 +226,7 @@ export function DashboardPage() {
       }
     }
     loadCategoryBudgets()
-  }, [dateRange, timeframe, user?.id])
+  }, [dateRange, timeframe, user?.id, refreshKey])
 
   // Fetch previous period data for real trend comparison
   useEffect(() => {
@@ -242,7 +256,7 @@ export function DashboardPage() {
       }
     }
     loadPreviousPeriod()
-  }, [timeframe, selectedMonth, selectedYear])
+  }, [timeframe, selectedMonth, selectedYear, refreshKey])
 
   // Fetch same-month-last-year data for the YoY comparison toggle.
   // Only meaningful in Monthly view — in Yearly view, "previous period" is
@@ -271,7 +285,7 @@ export function DashboardPage() {
       }
     }
     loadYearOverYear()
-  }, [timeframe, selectedMonth])
+  }, [timeframe, selectedMonth, refreshKey])
 
   const handleBudgetChange = async () => {
     const newBudget = parseFloat(budgetInput)
@@ -344,6 +358,16 @@ export function DashboardPage() {
   // dropping them from every total on this page.
   const otherTransactions = transactions.filter(isOther)
   const totalOther = otherTransactions.reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
+
+  const otherByCategory = otherTransactions.reduce((acc: Record<string, number>, t: Transaction) => {
+    const category = t.category_name || 'Uncategorized'
+    acc[category] = (acc[category] || 0) + Number(t.amount)
+    return acc
+  }, {})
+
+  const otherCategoriesList = Object.entries(otherByCategory)
+    .sort(([, a], [, b]) => b - a)
+    .map(([category, amount]) => ({ label: category, value: amount, change: 0 }))
 
   const remaining = Math.max(0, monthlyBudget - totalExpense)
   const txCount = transactions.length
@@ -439,17 +463,36 @@ export function DashboardPage() {
           </div>
 
           {timeframe === 'monthly' ? (
-            <select
-              className="dashboard__month-selector"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-            >
-              {yearRange.map((month: string) => (
-                <option key={month} value={month}>
-                  {new Date(parseInt(month.split('-')[0]), parseInt(month.split('-')[1]) - 1).toLocaleString('en-US', { month: 'long' })}
-                </option>
-              ))}
-            </select>
+            <div className="dashboard__month-year-controls">
+              <select
+                className="dashboard__year-selector"
+                value={selectedMonth.split('-')[0]}
+                onChange={(e) => {
+                  const newYear = e.target.value
+                  const month = selectedMonth.split('-')[1]
+                  setSelectedMonth(`${newYear}-${month}`)
+                }}
+              >
+                {yearsRange.map((yr: number) => (
+                  <option key={yr} value={yr}>{yr}</option>
+                ))}
+              </select>
+              <select
+                className="dashboard__month-selector"
+                value={selectedMonth.split('-')[1]}
+                onChange={(e) => {
+                  const year = selectedMonth.split('-')[0]
+                  const newMonth = e.target.value
+                  setSelectedMonth(`${year}-${newMonth}`)
+                }}
+              >
+                {getYearRange(parseInt(selectedMonth.split('-')[0])).map((month: string) => (
+                  <option key={month} value={month.split('-')[1]}>
+                    {new Date(parseInt(month.split('-')[0]), parseInt(month.split('-')[1]) - 1).toLocaleString('en-US', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+            </div>
           ) : (
             <div className="dashboard__year-controls">
               <label htmlFor="dashboard-year" className="dashboard__year-label">Year</label>
@@ -465,6 +508,16 @@ export function DashboardPage() {
               />
             </div>
           )}
+
+          <button
+            className={`dashboard__refresh-btn ${isRefreshing ? 'dashboard__refresh-btn--spinning' : ''}`}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            title="Refresh dashboard data"
+          >
+            <span className="dashboard__refresh-icon">↻</span>
+            {isRefreshing ? 'Refreshing…' : 'Refresh'}
+          </button>
         </div>
       </div>
 
@@ -511,6 +564,15 @@ export function DashboardPage() {
           <h2 className="dashboard__section-title">6-Month Trend</h2>
           <TrendChart data={monthlyTrend} />
         </Card>
+      )}
+
+      {otherCategoriesList.length > 0 && (
+        <TrendCard
+          title="Other Activity by Category"
+          data={otherCategoriesList}
+          onItemClick={handleCategoryClick}
+          showChange={false}
+        />
       )}
 
       <div className="dashboard__grid">
