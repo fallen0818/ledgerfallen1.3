@@ -577,6 +577,7 @@ export function DashboardPage() {
           value={formatCurrency(totalRevenue - totalExpense)}
           sub={displayLabel}
           accent={(totalRevenue - totalExpense) < 0}
+          positive={(totalRevenue - totalExpense) >= 0}
           icon={(totalRevenue - totalExpense) >= 0 ? "📈" : "📉"}
         />
         <StatCard

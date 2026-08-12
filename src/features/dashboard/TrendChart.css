@@ -108,12 +108,11 @@
 }
 
 .trend-chart__bar--net-positive {
-  background: var(--brass);
+  background: var(--success);
 }
 
 .trend-chart__bar--net-negative {
-  background: var(--brass);
-  opacity: 0.5;
+  background: var(--danger);
 }
 
 .trend-chart__net-label {
