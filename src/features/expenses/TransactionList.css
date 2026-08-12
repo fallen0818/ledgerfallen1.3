@@ -122,8 +122,8 @@
 .tx-list__badge {
   display: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
   color: var(--accent);
   font-size: 0.78rem;
   font-weight: 600;
@@ -402,11 +402,8 @@
   }
 }
 
-/* Hide on mobile utility class */
-.tx-list__hide-mobile {
-  /* Default visible */
-}
-
+/* Hide on mobile utility class — no base rule needed, elements are
+   visible by default; only the mobile override below does anything. */
 @media (max-width: 768px) {
   .tx-list__hide-mobile {
     display: none;
