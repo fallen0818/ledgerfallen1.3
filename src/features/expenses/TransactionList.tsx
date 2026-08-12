@@ -48,13 +48,14 @@ const SearchIcon = () => (
   </svg>
 )
 
-export function TransactionList({ transactions, loading, onDelete, onEdit }: {
+export function TransactionList({ transactions, loading, onDelete, onEdit, initialSearch = '' }: {
   transactions: Transaction[]
   loading: boolean
   onDelete: (id: string) => void
   onEdit: (tx: Transaction) => void
+  initialSearch?: string
 }) {
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchQuery, setSearchQuery] = useState(initialSearch)
   const [visibleCount, setVisibleCount] = useState(50)
   const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, tx: null as Transaction | null, loading: false })
 

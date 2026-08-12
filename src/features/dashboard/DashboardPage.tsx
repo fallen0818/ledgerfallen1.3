@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTransactions } from '../../hooks/useTransactions'
 import { useAuth } from '../../hooks/useAuth'
 import { Card } from '../../components/Shared/Card'
@@ -37,13 +38,45 @@ function StatCard({ label, value, sub, accent, positive, icon }: { label: string
   )
 }
 
-function TrendCard({ title, data }: { title: string; data: { label: string; value: number; change: number }[] }) {
+function TrendCard({ title, data, onItemClick, comparisonMode, onComparisonModeChange }: {
+  title: string
+  data: { label: string; value: number; change: number }[]
+  onItemClick?: (label: string) => void
+  comparisonMode?: 'previous' | 'yoy'
+  onComparisonModeChange?: (mode: 'previous' | 'yoy') => void
+}) {
   return (
     <Card className="trend-card">
-      <h3 className="trend-card__title">{title}</h3>
+      <div className="trend-card__header">
+        <h3 className="trend-card__title">{title}</h3>
+        {onComparisonModeChange && (
+          <div className="trend-card__toggle-wrap">
+            <span className="trend-card__toggle-label">Compare:</span>
+            <div className="trend-card__toggle">
+              <button
+                className={`trend-card__toggle-btn ${comparisonMode === 'previous' ? 'trend-card__toggle-btn--active' : ''}`}
+                onClick={() => onComparisonModeChange('previous')}
+              >
+                vs Last Month
+              </button>
+              <button
+                className={`trend-card__toggle-btn ${comparisonMode === 'yoy' ? 'trend-card__toggle-btn--active' : ''}`}
+                onClick={() => onComparisonModeChange('yoy')}
+              >
+                vs Last Year
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
       <div className="trend-card__list">
         {data.map((item, index) => (
-          <div key={index} className="trend-item">
+          <div
+            key={index}
+            className={`trend-item ${onItemClick ? 'trend-item--clickable' : ''}`}
+            onClick={onItemClick ? () => onItemClick(item.label) : undefined}
+            title={onItemClick ? `View ${item.label} transactions` : undefined}
+          >
             <div className="trend-item__info">
               <span className="trend-item__label">{item.label}</span>
               <span className="trend-item__value">{formatCurrency(item.value)}</span>
@@ -51,6 +84,7 @@ function TrendCard({ title, data }: { title: string; data: { label: string; valu
             <div className={`trend-item__change ${item.change >= 0 ? 'trend-item__change--positive' : 'trend-item__change--negative'}`}>
               {item.change >= 0 ? '▲' : '▼'} {Math.abs(item.change)}%
             </div>
+            {onItemClick && <span className="trend-item__arrow">→</span>}
           </div>
         ))}
       </div>
@@ -62,6 +96,10 @@ const DEFAULT_BUDGET = 2000
 
 export function DashboardPage() {
   const { user } = useAuth()
+  const navigate = useNavigate()
+  const handleCategoryClick = (category: string) => {
+    navigate(`/expenses?search=${encodeURIComponent(category)}`)
+  }
   const [timeframe, setTimeframe] = useState<'monthly' | 'yearly'>('monthly')
   const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
@@ -80,6 +118,8 @@ export function DashboardPage() {
   const [isEditingCategoryBudgets, setIsEditingCategoryBudgets] = useState(false)
   const [categoryBudgets, setCategoryBudgets] = useState<Record<string, number>>({})
   const [previousPeriodBreakdown, setPreviousPeriodBreakdown] = useState<Record<string, number>>({})
+  const [yearOverYearBreakdown, setYearOverYearBreakdown] = useState<Record<string, number>>({})
+  const [comparisonMode, setComparisonMode] = useState<'previous' | 'yoy'>('previous')
   const [monthlyTrend, setMonthlyTrend] = useState<{ monthLabel: string; expense: number; revenue: number }[]>([])
 
   const isRevenue = (t: Transaction) => isRevenueType(t.type)
@@ -204,6 +244,35 @@ export function DashboardPage() {
     loadPreviousPeriod()
   }, [timeframe, selectedMonth, selectedYear])
 
+  // Fetch same-month-last-year data for the YoY comparison toggle.
+  // Only meaningful in Monthly view — in Yearly view, "previous period" is
+  // already the prior year, so there's nothing extra to compare against.
+  useEffect(() => {
+    if (timeframe !== 'monthly') {
+      setYearOverYearBreakdown({})
+      return
+    }
+    async function loadYearOverYear() {
+      try {
+        const [y, m] = selectedMonth.split('-').map(Number)
+        const lastYearRange = `${y - 1}-${String(m).padStart(2, '0')}`
+        const lastYearTransactions = await getTransactions(lastYearRange)
+        const breakdown: Record<string, number> = {}
+        lastYearTransactions
+          .filter((t: any) => isExpenseType(t.type))
+          .forEach((tx: any) => {
+            const category = tx.category_name || 'Uncategorized'
+            breakdown[category] = (breakdown[category] || 0) + Number(tx.amount)
+          })
+        setYearOverYearBreakdown(breakdown)
+      } catch (err) {
+        // Silently fail — YoY data is supplementary
+        setYearOverYearBreakdown({})
+      }
+    }
+    loadYearOverYear()
+  }, [timeframe, selectedMonth])
+
   const handleBudgetChange = async () => {
     const newBudget = parseFloat(budgetInput)
     if (isNaN(newBudget) || newBudget <= 0) {
@@ -288,10 +357,17 @@ export function DashboardPage() {
       return acc
     }, {} as Record<string, number>)
 
+  // Only Monthly view offers a real choice here — in Yearly view, the
+  // "previous period" already IS the prior year, so there's nothing to
+  // toggle between.
+  const activeComparisonBreakdown = (timeframe === 'monthly' && comparisonMode === 'yoy')
+    ? yearOverYearBreakdown
+    : previousPeriodBreakdown
+
   const allCategories = Object.entries(categoryBreakdown)
     .sort(([, a], [, b]) => b - a)
     .map(([category, amount]) => {
-      const prevAmount = previousPeriodBreakdown[category] || 0
+      const prevAmount = activeComparisonBreakdown[category] || 0
       const change = prevAmount > 0
         ? Math.round(((amount - prevAmount) / prevAmount) * 100)
         : (amount > 0 ? 100 : 0)
@@ -611,6 +687,9 @@ export function DashboardPage() {
         <TrendCard
           title={timeframe === 'monthly' ? "All Expense Categories" : "All Categories This Year"}
           data={allCategories}
+          onItemClick={handleCategoryClick}
+          comparisonMode={timeframe === 'monthly' ? comparisonMode : undefined}
+          onComparisonModeChange={timeframe === 'monthly' ? setComparisonMode : undefined}
         />
 
         <Card className="dashboard__summary-card">

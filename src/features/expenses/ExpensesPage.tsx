@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useTransactions } from '../../hooks/useTransactions'
 import { TransactionForm } from './TransactionForm'
 import { TransactionList } from './TransactionList'
@@ -21,6 +22,8 @@ interface Transaction {
 }
 
 export function ExpensesPage() {
+  const [searchParams] = useSearchParams()
+  const initialSearch = searchParams.get('search') || ''
   const { selectedMonth, selectedYear } = useSidebarFilters()
   const month = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}`
 
@@ -131,6 +134,7 @@ export function ExpensesPage() {
         loading={loading}
         onDelete={removeTransaction}
         onEdit={openEdit}
+        initialSearch={initialSearch}
       />
 
       <Modal
