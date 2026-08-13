@@ -118,7 +118,7 @@ export function TransactionList({ transactions, loading, onDelete, onEdit, initi
 
   return (
     <>
-      {/* Summary Cards */}
+      {/* Summary Cards — standard placement: top of page, above search/table */}
       <div className="tx-list__summary">
         <div className="tx-summary-card">
           <div className="tx-summary-card__label">Total Revenue</div>
@@ -177,6 +177,7 @@ export function TransactionList({ transactions, loading, onDelete, onEdit, initi
           <span>Amount</span>
           <span className="tx-list__actions-head">Actions</span>
         </div>
+
         {filteredTransactions.length === 0 ? (
           <div className="tx-list__empty-search">
             No transactions match your search.
