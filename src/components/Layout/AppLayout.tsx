@@ -10,13 +10,19 @@ interface SidebarFiltersContext {
   selectedYear: number
   setSelectedMonth: (month: number) => void
   setSelectedYear: (year: number) => void
+  isMobileMenuOpen: boolean
+  toggleMobileMenu: () => void
+  closeMobileMenu: () => void
 }
 
 const SidebarContext = createContext<SidebarFiltersContext>({
   selectedMonth: new Date().getMonth(),
   selectedYear: new Date().getFullYear(),
   setSelectedMonth: () => { },
-  setSelectedYear: () => { }
+  setSelectedYear: () => { },
+  isMobileMenuOpen: false,
+  toggleMobileMenu: () => { },
+  closeMobileMenu: () => { }
 })
 
 export const useSidebarFilters = () => useContext(SidebarContext)
@@ -24,12 +30,16 @@ export const useSidebarFilters = () => useContext(SidebarContext)
 export function AppLayout() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth())
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const contextValue = {
     selectedMonth,
     selectedYear,
     setSelectedMonth,
-    setSelectedYear
+    setSelectedYear,
+    isMobileMenuOpen,
+    toggleMobileMenu: () => setIsMobileMenuOpen((open) => !open),
+    closeMobileMenu: () => setIsMobileMenuOpen(false)
   }
 
   return (

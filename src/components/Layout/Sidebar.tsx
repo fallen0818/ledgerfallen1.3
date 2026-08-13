@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom'
 import { getTransactions } from '../../services/transactionService'
 import { formatCurrency } from '../../utils/currency'
 import { useSidebarFilters } from './AppLayout'
+import { isRevenueType } from '../../utils/transactionTypes'
 import './Sidebar.css'
 
 const NAV_ITEMS = [
@@ -21,7 +22,7 @@ const MONTHS = [
 export function Sidebar() {
   const [transactionCount, setTransactionCount] = useState(0)
   const [totalAmount, setTotalAmount] = useState(0)
-  const { selectedMonth, selectedYear, setSelectedMonth, setSelectedYear } = useSidebarFilters()
+  const { selectedMonth, selectedYear, setSelectedMonth, setSelectedYear, isMobileMenuOpen, closeMobileMenu } = useSidebarFilters()
 
   useEffect(() => {
     async function fetchTransactionData() {
@@ -33,7 +34,7 @@ export function Sidebar() {
 
         const total = transactions.reduce((sum, transaction) => {
           const amount = Number(transaction.amount)
-          return sum + (transaction.type === 'income' ? amount : -amount)
+          return sum + (isRevenueType(transaction.type) ? amount : -amount)
         }, 0)
         setTotalAmount(total)
       } catch (err) {
@@ -58,30 +59,42 @@ export function Sidebar() {
   const currentMonthLabel = `${MONTHS[selectedMonth]} ${selectedYear}`
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar__brand">
-        <span className="sidebar__brand-icon">⚖️</span>
-        <span className="sidebar__brand-name">Fallen<br />Ledger</span>
-      </div>
-
-      <nav className="sidebar__nav">
-        {NAV_ITEMS.map(({ to, label, icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/'}
-            className={({ isActive }) =>
-              `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
-            }
+    <>
+      {isMobileMenuOpen && (
+        <div className="sidebar-backdrop" onClick={closeMobileMenu} aria-hidden="true" />
+      )}
+      <aside className={`sidebar ${isMobileMenuOpen ? 'sidebar--open' : ''}`}>
+        <div className="sidebar__brand">
+          <span className="sidebar__brand-icon">⚖️</span>
+          <span className="sidebar__brand-name">Fallen<br />Ledger</span>
+          <button
+            className="sidebar__close-btn"
+            onClick={closeMobileMenu}
+            aria-label="Close menu"
           >
-            <span className="sidebar__link-icon">{icon}</span>
-            <span className="sidebar__link-label">{label}</span>
-            {to === '/expenses' && transactionCount > 0 && (
-              <span className="sidebar__transaction-count">{transactionCount}</span>
-            )}
-          </NavLink>
-        ))}
-      </nav>
+            ✕
+          </button>
+        </div>
+
+        <nav className="sidebar__nav">
+          {NAV_ITEMS.map(({ to, label, icon }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={to === '/'}
+              onClick={closeMobileMenu}
+              className={({ isActive }) =>
+                `sidebar__link ${isActive ? 'sidebar__link--active' : ''}`
+              }
+            >
+              <span className="sidebar__link-icon">{icon}</span>
+              <span className="sidebar__link-label">{label}</span>
+              {to === '/expenses' && transactionCount > 0 && (
+                <span className="sidebar__transaction-count">{transactionCount}</span>
+              )}
+            </NavLink>
+          ))}
+        </nav>
 
       <div className="sidebar__transactions">
         <div className="sidebar__transactions-header">
@@ -158,5 +171,6 @@ export function Sidebar() {
         <span className="sidebar__footer-text">v1.0.0</span>
       </div>
     </aside>
+    </>
   )
 }

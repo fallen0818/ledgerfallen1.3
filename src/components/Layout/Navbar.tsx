@@ -1,6 +1,7 @@
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { useTheme } from '../../hooks/useTheme'
+import { useSidebarFilters } from './AppLayout'
 import { Button } from '../Shared/Button'
 import './Navbar.css'
 
@@ -13,12 +14,14 @@ const PAGE_TITLES: PageTitles = {
   '/expenses': 'Transactions',
   '/audit': 'Audit Reports',
   '/reports': 'Reports',
+  '/categories': 'Categories',
 }
 
 export function Navbar() {
   const { pathname } = useLocation()
   const { user, signOut } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const { toggleMobileMenu } = useSidebarFilters()
   const title = PAGE_TITLES[pathname] ?? 'Fallen Ledger'
 
   const initials = user?.email
@@ -27,6 +30,13 @@ export function Navbar() {
 
   return (
     <header className="navbar">
+      <button
+        className="navbar__menu-btn"
+        onClick={toggleMobileMenu}
+        aria-label="Open menu"
+      >
+        ☰
+      </button>
       <h1 className="navbar__title">{title}</h1>
       <div className="navbar__actions">
         <button

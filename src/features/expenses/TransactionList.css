@@ -145,6 +145,14 @@
   justify-content: flex-end;
 }
 
+@media (max-width: 768px) {
+  .btn.tx-list__action-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+}
+
 /* Circular icon buttons for row actions — specific selector (not !important)
    cleanly overrides the base .btn padding since .btn.tx-list__action-btn
    is naturally more specific than .btn alone. */

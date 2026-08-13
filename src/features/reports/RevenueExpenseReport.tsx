@@ -86,7 +86,8 @@ export function RevenueExpenseReport({ transactions }: { transactions: Transacti
         <Card className="re-report__breakdown">
           <h3 className="re-report__title">Filtered Results ({transactions.length})</h3>
           <div className="re-report__table-wrap">
-            <table className="re-table">
+            <div className="re-table-wrapper">
+              <table className="re-table">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -108,6 +109,7 @@ export function RevenueExpenseReport({ transactions }: { transactions: Transacti
                 ))}
               </tbody>
             </table>
+            </div>
             {!isPrinting && transactions.length > visibleCount && (
               <div className="re-report__actions">
                 <button

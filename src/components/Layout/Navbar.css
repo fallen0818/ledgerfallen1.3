@@ -58,3 +58,29 @@
   background: var(--surface-hover, rgba(255, 255, 255, 0.08));
   transform: scale(1.1);
 }
+
+/* ---------- Mobile hamburger menu button ---------- */
+
+.navbar__menu-btn {
+  display: none;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-primary);
+  font-size: 1.1rem;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  margin-right: var(--space-3);
+}
+
+.navbar__menu-btn:hover {
+  background: var(--surface-hover);
+}
+
+@media (max-width: 768px) {
+  .navbar__menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
